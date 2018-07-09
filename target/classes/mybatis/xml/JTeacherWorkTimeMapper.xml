@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JTeacherWorkTimeMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		workTimeId, teacherId, monday, tuesday, wednesday, thursday, friday, saturday, sunday, remark, isDel
+	</sql>
+
+	<select id="getTeacherWorkTime" resultType="com.summ.model.response.TeacherWorkTimeRes"
+			parameterType="com.summ.model.request.TeacherWortTimeByOrderReq">
+		SELECT
+		j.monday,
+		j.tuesday,
+		j.wednesday,
+		j.thursday,
+		j.friday,
+		j.saturday,
+		j.sunday,
+		jni.teacherName,
+		jni.teacherPhone,
+		jni.teacherId
+		FROM
+		j_teacher_work_time j
+		LEFT JOIN j_teacher jni ON jni.teacherId = j.teacherId
+		WHERE
+		 1=1
+		AND j.isDel=16
+		<if test="0!=teacherWortTimeByOrderReq.teacherId">
+			AND j.teacherId=#{teacherWortTimeByOrderReq.teacherId}
+		</if>
+		<if test="2==teacherWortTimeByOrderReq.operationType">
+			AND jni.hot = 168
+		</if>
+	</select>
+
+	<select id="getTeacherScheduleTime" parameterType="com.summ.model.request.TeacherWortTimeByOrderReq"
+			resultType="com.summ.model.response.TimeAndWeekRes">
+		SELECT
+		j.startTime AS startId,
+		j.endTime AS endId,
+		j.startTimeValue AS start,
+		j.endTimeValue AS 'end',
+		j.weekday AS week,
+		concat(jc.customerName,"-",jc.customerPhone,"-",jch.houseAddress) AS 'describe'
+		FROM
+		j_order_schedule j
+		LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId = j.scheduleId
+		LEFT JOIN j_goods_contract jgc ON j.serviceId = jgc.goodsId
+		LEFT JOIN j_customer jc ON  j.customerId = jc.customerId
+		LEFT JOIN j_customer_house jch ON jch.houseId=j.houseId
+		WHERE
+		j.scheduleDate BETWEEN #{startDate}
+		AND  #{endDate}
+		AND j.isDel=16
+		AND j.scheduleStatus != 155
+		AND jsn.supplierId = -1
+		AND jsn.nannyId = #{teacherId}
+
+	</select>
+</mapper>

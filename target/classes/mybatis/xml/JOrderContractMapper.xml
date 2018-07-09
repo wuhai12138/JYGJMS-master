@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JOrderContractMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		orderId, customerId, shopId, houseId, orderStatus, startDate, endDate, goodsId, teacherId, createTime, remark, isDel
+	</sql>
+
+	<select id="getContractCount" parameterType="com.summ.model.request.OrderContractReq" resultType="java.lang.Integer">
+		SELECT COUNT(joc.orderId)
+		FROM j_order_contract joc
+		LEFT JOIN j_shop js ON js.shopId = joc.shopId
+		LEFT JOIN j_customer jc ON jc.customerId = joc.customerId
+		LEFT JOIN j_customer_house jch ON jch.houseId = joc.houseId
+		LEFT JOIN j_dict_info jdi ON jdi.ID = joc.orderStatus
+		LEFT JOIN j_goods_contract jgc ON jgc.goodsId = joc.goodsId
+		<if test="0 == orderContractReq.shopId">
+			LEFT JOIN j_admin_shop jas ON jas.shopId = joc.shopId
+		</if>
+		WHERE joc.isDel = 16
+		AND jc.customerName LIKE concat(concat('%',#{orderContractReq.customerName}),'%')
+		AND jc.customerPhone LIKE concat(concat('%',#{orderContractReq.customerPhone}),'%')
+		AND jch.houseAddress LIKE concat(concat('%',#{orderContractReq.houseAddress}),'%')
+		<if test="0 != orderContractReq.orderStatus">
+			AND joc.orderStatus = #{orderContractReq.orderStatus}
+		</if>
+		<if test="0 != orderContractReq.orderCloseStatus">
+			AND joc.orderCloseStatus = #{orderContractReq.orderCloseStatus}
+		</if>
+		<if test="0 != orderContractReq.createId">
+			AND joc.createId = #{orderContractReq.createId}
+		</if>
+		<if test="0 != orderContractReq.shopId">
+			AND joc.shopId = #{orderContractReq.shopId}
+		</if>
+		<if test="0 == orderContractReq.shopId">
+			AND jas.adminId = #{orderContractReq.adminId}
+		</if>
+		<if test="0 != orderContractReq.customerId">
+			AND jc.customerId = #{orderContractReq.customerId}
+		</if>
+	</select>
+
+	<select id="getContractList" parameterType="com.summ.model.request.OrderContractReq" resultType="com.summ.model.response.OrderContractRes">
+		SELECT joc.*,jc.customerName,jch.houseAddress,jdi.INFO AS orderStatusInfo,jc.customerPhone,jgc.service,js.shopName,jcs.serviceDetail AS needString,jcs.serviceId,jdi2.INFO AS orderCloseStatusInfo,jc.customerBalance
+		FROM j_order_contract joc
+		LEFT JOIN j_shop js ON js.shopId = joc.shopId
+		LEFT JOIN j_customer jc ON jc.customerId = joc.customerId
+		LEFT JOIN j_customer_house jch ON jch.houseId = joc.houseId
+		LEFT JOIN j_dict_info jdi ON jdi.ID = joc.orderStatus
+		LEFT JOIN j_dict_info jdi2 ON jdi2.ID = joc.orderCloseStatus
+		LEFT JOIN j_goods_contract jgc ON jgc.goodsId = joc.goodsId
+		LEFT JOIN j_customer_service jcs ON jcs.serviceId = joc.serviceId
+		<if test="0 == orderContractReq.shopId">
+			LEFT JOIN j_admin_shop jas ON jas.shopId = joc.shopId
+		</if>
+		WHERE joc.isDel = 16
+		AND jc.customerName LIKE concat(concat('%',#{orderContractReq.customerName}),'%')
+		AND jc.customerPhone LIKE concat(concat('%',#{orderContractReq.customerPhone}),'%')
+		AND jch.houseAddress LIKE concat(concat('%',#{orderContractReq.houseAddress}),'%')
+		<if test="0 != orderContractReq.orderStatus">
+			AND joc.orderStatus = #{orderContractReq.orderStatus}
+		</if>
+		<if test="0 != orderContractReq.orderCloseStatus">
+			AND joc.orderCloseStatus = #{orderContractReq.orderCloseStatus}
+		</if>
+		<if test="0 != orderContractReq.createId">
+			AND joc.createId = #{orderContractReq.createId}
+		</if>
+		<if test="0 != orderContractReq.shopId">
+			AND joc.shopId = #{orderContractReq.shopId}
+		</if>
+		<if test="0 == orderContractReq.shopId">
+		    AND jas.adminId = #{orderContractReq.adminId}
+		</if>
+		<if test="0 != orderContractReq.customerId">
+			AND jc.customerId = #{orderContractReq.customerId}
+		</if>
+		ORDER BY joc.orderId DESC
+		LIMIT #{orderContractReq.page},#{orderContractReq.size}
+	</select>
+</mapper>

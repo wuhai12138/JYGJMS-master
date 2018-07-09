@@ -1,0 +1,752 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JOrderScheduleMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		scheduleId, orderId, statmentId, unitPrice, totalPrice, cost, statmentStatus, payStatus, startTime, endTime, clockTime, completedTime, suspendTime, cancelTime, week
+	</sql>
+
+    <select id="getScheduleCount" parameterType="com.summ.model.request.OrderScheduleReq"
+            resultType="java.lang.Integer">
+        SELECT COUNT(jos.scheduleId)
+        FROM j_order_schedule jos
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId = jos.scheduleId
+        LEFT JOIN j_nanny_info jni ON jni.nannyId = jsn.nannyId
+        WHERE jos.orderId = #{orderScheduleReq.orderId}
+        AND jos.isDel=16
+        AND jos.orderType=#{orderScheduleReq.orderType}
+        AND jos.scheduleDate BETWEEN #{orderScheduleReq.scheduleDateBefore}
+        AND #{orderScheduleReq.scheduleDateAfter}
+        <if test="0 != orderScheduleReq.scheduleStatus">
+            AND jos.scheduleStatus = #{orderScheduleReq.scheduleStatus}
+        </if>
+        <if test="0 != orderScheduleReq.payStatus">
+            AND jos.payStatus = #{orderScheduleReq.payStatus}
+        </if>
+    </select>
+
+    <select id="getScheduleList" parameterType="com.summ.model.request.OrderScheduleReq"
+            resultType="com.summ.model.response.OrderScheduleRes">
+        SELECT jos.*,d1.INFO AS scheduleStatusInfo,d2.INFO AS
+        payStatusInfo,jsn.nannyId,jni.nannyName,jni.nannyPhone,d3.INFO AS nannyCurrentPayment,jgc.price AS
+        scheduleCurrentPrice,d4.INFO AS scheduleTypeInfo
+        FROM j_order_schedule jos
+        LEFT JOIN j_dict_info d1 ON d1.ID = jos.scheduleStatus
+        LEFT JOIN j_dict_info d2 ON d2.ID = jos.payStatus
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId = jos.scheduleId
+        LEFT JOIN j_nanny_info jni ON jni.nannyId = jsn.nannyId
+        LEFT JOIN j_dict_info d3 ON d3.ID = jni.nannyLevel
+        LEFT JOIN j_dict_info d4 ON d4.ID = jos.scheduleType
+        LEFT JOIN j_order_contract joc ON joc.orderId = jos.orderId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = joc.goodsId
+        WHERE jos.orderId = #{orderScheduleReq.orderId}
+        AND jos.isDel=16
+        AND jos.orderType=#{orderScheduleReq.orderType}
+        AND jos.scheduleDate BETWEEN #{orderScheduleReq.scheduleDateBefore}
+        AND #{orderScheduleReq.scheduleDateAfter}
+        <if test="0 != orderScheduleReq.scheduleStatus">
+            AND jos.scheduleStatus = #{orderScheduleReq.scheduleStatus}
+        </if>
+        <if test="0 != orderScheduleReq.payStatus">
+            AND jos.payStatus = #{orderScheduleReq.payStatus}
+        </if>
+        ORDER BY jos.scheduleDate,jos.startTime
+        LIMIT #{orderScheduleReq.page},#{orderScheduleReq.size}
+
+    </select>
+
+    <select id="getScheduleDetail"
+            resultType="com.summ.model.response.OrderScheduleRes">
+        SELECT jos.*,d1.INFO AS scheduleStatusInfo,d2.INFO AS
+        payStatusInfo,jsn.nannyId,jni.nannyName,jni.nannyPhone,d3.INFO AS nannyCurrentPayment,jgc.price AS
+        scheduleCurrentPrice,d4.INFO AS scheduleTypeInfo
+        FROM j_order_schedule jos
+        LEFT JOIN j_dict_info d1 ON d1.ID = jos.scheduleStatus
+        LEFT JOIN j_dict_info d2 ON d2.ID = jos.payStatus
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId = jos.scheduleId
+        LEFT JOIN j_nanny_info jni ON jni.nannyId = jsn.nannyId
+        LEFT JOIN j_dict_info d3 ON d3.ID = jni.nannyLevel
+        LEFT JOIN j_dict_info d4 ON d4.ID = jos.scheduleType
+        LEFT JOIN j_order_contract joc ON joc.orderId = jos.orderId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = joc.goodsId
+        WHERE jos.scheduleId=#{0}
+        AND jos.isDel=16
+    </select>
+
+    <select id="getScheduleListByList" parameterType="java.util.List"
+            resultType="com.summ.model.response.OrderScheduleRes">
+        SELECT jos.*,d1.INFO AS scheduleStatusInfo,d2.INFO AS
+        payStatusInfo,d4.INFO AS scheduleTypeInfo,jsn.nannyId,jni.nannyName,jni.nannyPhone,jni.nannyLevel,d3.INFO AS
+        nannyCurrentPayment,jgc.price AS scheduleCurrentPrice
+        FROM j_order_schedule jos
+        LEFT JOIN j_dict_info d1 ON d1.ID = jos.scheduleStatus
+        LEFT JOIN j_dict_info d2 ON d2.ID = jos.payStatus
+        LEFT JOIN j_dict_info d4 ON d4.ID = jos.scheduleType
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId = jos.scheduleId
+        LEFT JOIN j_nanny_info jni ON jni.nannyId = jsn.nannyId
+        LEFT JOIN j_dict_info d3 ON d3.ID = jni.nannyLevel
+        LEFT JOIN j_order_contract joc ON joc.orderId = jos.orderId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = joc.goodsId
+        WHERE jos.scheduleId IN
+        <foreach collection="list" item="item" index="index" close=")" open="(" separator=",">
+            #{item}
+        </foreach>
+        AND jos.isDel=16
+    </select>
+
+    <select id="signNannySchedule" parameterType="java.util.Map" resultType="com.summ.model.JOrderSchedule">
+        SELECT
+        j.*
+        FROM
+        j_order_schedule j
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId = j.scheduleId
+        WHERE
+        jsn.nannyId = #{map.nannyId}
+        AND j.isDel=16
+        AND j.scheduleStatus != 155
+        AND j.scheduleDate BETWEEN #{map.startDate}
+        AND #{map.endDate}
+        AND (
+        (
+        #{map.startId} &lt; j.startTime
+        AND j.startTime &lt; #{map.endId}
+        )
+        OR (
+        #{map.startId} &lt; j.endTime
+        AND j.endTime &lt; #{map.endId}
+        )
+        OR (
+        j.startTime &lt; #{map.startId}
+        AND j.endTime &gt; #{map.endId}
+        )
+        OR (
+        j.startTime &gt; #{map.startId}
+        AND j.endTime &lt; #{map.endId}
+        )
+        OR (j.endTime = #{map.endId})
+        OR (#{map.startId} = j.startTime)
+        )
+        <foreach collection="map.weekList" index="index" item="item" open=" AND j.weekday IN (" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getTempScheduleList" parameterType="java.lang.Integer"
+            resultType="com.summ.model.response.OrderScheduleRes">
+		SELECT j.*,jsn.nannyId,jsn.supplierId,d1.INFO AS scheduleStatusInfo,d2.INFO AS payStatusInfo,d4.INFO AS scheduleTypeInfo
+		FROM j_order_schedule j
+		LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId=j.scheduleId
+		LEFT JOIN j_order_temp jot ON jot.orderId=j.orderId
+		LEFT JOIN j_dict_info d1 ON d1.ID = j.scheduleStatus
+		LEFT JOIN j_dict_info d2 ON d2.ID = jot.payStatus
+		LEFT JOIN j_dict_info d4 ON d4.ID = j.scheduleType
+		WHERE j.orderId=#{0}
+		AND j.isDel=16
+		AND j.orderType=164
+	</select>
+
+    <select id="getTempScheduleListByList" parameterType="java.util.List"
+            resultType="com.summ.model.response.OrderScheduleRes">
+        SELECT jos.*,jsn.nannyId,jsn.supplierId
+        FROM j_order_schedule jos
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId = jos.scheduleId
+        LEFT JOIN j_order_temp jot ON jot.orderId = jos.orderId
+        WHERE jos.scheduleId IN
+        <foreach collection="list" item="item" index="index" close=")" open="(" separator=",">
+            #{item}
+        </foreach>
+        AND jos.isDel=16
+    </select>
+
+    <select id="updateSchedulePrice" parameterType="java.util.Map">
+        UPDATE j_order_schedule
+        SET totalPrice=#{map.totalPrice},remark=#{map.remark}
+        <foreach collection="map.scheduleIdList" item="item" index="index" close=")" open="where scheduleId IN ("
+                 separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getContractScheduleList" parameterType="com.summ.model.request.ScheduleReq"
+            resultType="com.summ.model.response.ScheduleRes">
+        SELECT jos.*,d1.INFO AS scheduleStatusInfo,d2.INFO AS
+        payStatusInfo,d4.INFO AS scheduleTypeInfo,jsn.nannyId,jni.nannyName,jni.nannyPhone,d3.INFO AS
+        nannyCurrentPayment,jgc.price AS
+        scheduleCurrentPrice,jc.customerId,jc.customerName,jc.customerPhone,jch.houseAddress,joc.goodsId,jsh.shopId,jsh.shopName,ja1.adminName
+        AS clockName,ja2.adminName AS cancelName
+        FROM j_order_schedule jos
+        LEFT JOIN j_dict_info d1 ON d1.ID = jos.scheduleStatus
+        LEFT JOIN j_dict_info d2 ON d2.ID = jos.payStatus
+        LEFT JOIN j_dict_info d4 ON d4.ID = jos.scheduleType
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId = jos.scheduleId
+        LEFT JOIN j_nanny_info jni ON jni.nannyId = jsn.nannyId
+        LEFT JOIN j_dict_info d3 ON d3.ID = jni.nannyLevel
+        LEFT JOIN j_order_contract joc ON joc.orderId = jos.orderId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = jos.goodsId
+        LEFT JOIN j_customer jc ON jc.customerId = jos.customerId
+        LEFT JOIN j_customer_house jch ON jch.houseId = jos.houseId
+        LEFT JOIN j_shop jsh ON jsh.shopId = jos.shopId
+        left JOIN j_admin ja1 ON ja1.adminId = jos.clockId
+        left JOIN j_admin ja2 ON ja2.adminId = jos.cancelId
+        <if test="0 == scheduleReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = jos.shopId
+        </if>
+        WHERE jos.scheduleDate BETWEEN #{scheduleReq.startDate}
+        AND #{scheduleReq.endDate}
+        AND jos.isDel=16
+        AND jc.customerPhone LIKE concat(concat('%',#{scheduleReq.customerPhone}),'%')
+        AND jc.customerName LIKE concat(concat('%',#{scheduleReq.customerName}),'%')
+        AND jch.houseAddress LIKE concat(concat('%',#{scheduleReq.customerAddress}),'%')
+        AND jni.nannyName LIKE concat(concat('%',#{scheduleReq.nannyName}),'%')
+        AND jni.nannyPhone LIKE concat(concat('%',#{scheduleReq.nannyPhone}),'%')
+        <if test="0 != scheduleReq.customerId">
+            AND jos.customerId = #{scheduleReq.customerId}
+        </if>
+        <if test="0 != scheduleReq.nannyId">
+            AND jsn.nannyId = #{scheduleReq.nannyId}
+        </if>
+        <if test="0 != scheduleReq.payStatus">
+            AND jos.payStatus = #{scheduleReq.payStatus}
+        </if>
+        <if test="0 != scheduleReq.scheduleStatus">
+            AND jos.scheduleStatus = #{scheduleReq.scheduleStatus}
+        </if>
+        AND jos.orderType = #{scheduleReq.orderType}
+        <if test="0 != scheduleReq.nannyId">
+            AND jsn.nannyId = #{scheduleReq.nannyId}
+        </if>
+        <if test="0 != scheduleReq.shopId">
+            AND jos.shopId = #{scheduleReq.shopId}
+        </if>
+        <if test="0 == scheduleReq.shopId">
+            AND jas.adminId = #{scheduleReq.adminId}
+        </if>
+        LIMIT #{scheduleReq.page},#{scheduleReq.size}
+    </select>
+    <select id="getContractScheduleListCount" parameterType="com.summ.model.request.ScheduleReq"
+            resultType="java.lang.Integer">
+        SELECT COUNT(jos.scheduleId)
+        FROM j_order_schedule jos
+        LEFT JOIN j_dict_info d1 ON d1.ID = jos.scheduleStatus
+        LEFT JOIN j_dict_info d2 ON d2.ID = jos.payStatus
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId = jos.scheduleId
+        LEFT JOIN j_nanny_info jni ON jni.nannyId = jsn.nannyId
+        LEFT JOIN j_dict_info d3 ON d3.ID = jni.nannyLevel
+        LEFT JOIN j_order_contract joc ON joc.orderId = jos.orderId
+        LEFT JOIN j_customer jc ON jc.customerId = joc.customerId
+        LEFT JOIN j_customer_house jch ON jch.houseId = joc.houseId
+        <if test="0 == scheduleReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = joc.shopId
+        </if>
+        WHERE jos.scheduleDate BETWEEN #{scheduleReq.startDate}
+        AND #{scheduleReq.endDate}
+        AND jos.isDel=16
+        AND jc.customerPhone LIKE concat(concat('%',#{scheduleReq.customerPhone}),'%')
+        AND jc.customerName LIKE concat(concat('%',#{scheduleReq.customerName}),'%')
+        AND jch.houseAddress LIKE concat(concat('%',#{scheduleReq.customerAddress}),'%')
+        AND jni.nannyName LIKE concat(concat('%',#{scheduleReq.nannyName}),'%')
+        AND jni.nannyPhone LIKE concat(concat('%',#{scheduleReq.nannyPhone}),'%')
+        <if test="0 != scheduleReq.customerId">
+            AND joc.customerId = #{scheduleReq.customerId}
+        </if>
+        <if test="0 != scheduleReq.nannyId">
+            AND jsn.nannyId = #{scheduleReq.nannyId}
+        </if>
+        <if test="0 != scheduleReq.payStatus">
+            AND jos.payStatus = #{scheduleReq.payStatus}
+        </if>
+        <if test="0 != scheduleReq.scheduleStatus">
+            AND jos.scheduleStatus = #{scheduleReq.scheduleStatus}
+        </if>
+        AND jos.orderType = #{scheduleReq.orderType}
+        <if test="0 != scheduleReq.nannyId">
+            AND jsn.nannyId = #{scheduleReq.nannyId}
+        </if>
+        <if test="0 != scheduleReq.shopId">
+            AND joc.shopId = #{scheduleReq.shopId}
+        </if>
+        <if test="0 == scheduleReq.shopId">
+            AND jas.adminId = #{scheduleReq.adminId}
+        </if>
+    </select>
+
+    <select id="getAllTempScheduleList" parameterType="com.summ.model.request.ScheduleReq"
+            resultType="com.summ.model.response.ScheduleRes">
+        SELECT jos.*,jsn.nannyId,jsn.supplierId,d1.INFO AS scheduleStatusInfo,d2.INFO AS
+        payStatusInfo,d4.INFO AS
+        scheduleTypeInfo,jot.goodsId,jot.serviceAmount,jc.customerId,jc.customerName,jc.customerPhone,jch.houseAddress,jsh.shopId,jsh.shopName
+        <if test="1 == scheduleReq.supplierId">
+            ,jni.nannyName,jni.nannyPhone
+        </if>
+        <if test="-1 == scheduleReq.supplierId">
+            ,jt.teacherName AS nannyName,jt.teacherPhone AS nannyPhone
+        </if>
+        <if test="1 != scheduleReq.supplierId and -1 != scheduleReq.supplierId">
+            ,jcd.companyName AS nannyName,js.phone AS nannyPhone
+        </if>
+        FROM j_order_schedule jos
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId=jos.scheduleId
+        LEFT JOIN j_dict_info d1 ON d1.ID = jos.scheduleStatus
+        LEFT JOIN j_dict_info d2 ON d2.ID = jos.payStatus
+        LEFT JOIN j_dict_info d4 ON d4.ID = jos.scheduleType
+        LEFT JOIN j_order_temp jot ON jot.orderId = jos.orderId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = jot.goodsId
+        LEFT JOIN j_customer jc ON jc.customerId = jot.customerId
+        LEFT JOIN j_customer_house jch ON jch.houseId = jot.houseId
+        LEFT JOIN j_shop jsh ON jsh.shopId = jot.shopId
+        <if test="1 == scheduleReq.supplierId">
+            LEFT JOIN j_nanny_info jni ON jni.nannyId = jsn.nannyId
+        </if>
+        <if test="-1 == scheduleReq.supplierId">
+            LEFT JOIN j_teacher jt ON jt.teacherId = jsn.nannyId
+        </if>
+        <if test="1 != scheduleReq.supplierId and -1 != scheduleReq.supplierId">
+            LEFT JOIN j_supplier js ON js.supplierId = jsn.nannyId
+            LEFT JOIN j_company_data jcd ON jcd.companyId=js.companyId
+        </if>
+        <if test="0 == scheduleReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = jot.shopId
+        </if>
+        WHERE jos.scheduleDate BETWEEN #{scheduleReq.startDate}
+        AND #{scheduleReq.endDate}
+        AND jos.isDel=16
+        AND jc.customerPhone LIKE concat(concat('%',#{scheduleReq.customerPhone}),'%')
+        AND jc.customerName LIKE concat(concat('%',#{scheduleReq.customerName}),'%')
+        AND jch.houseAddress LIKE concat(concat('%',#{scheduleReq.customerAddress}),'%')
+        <if test="1 == scheduleReq.supplierId">
+            AND jni.nannyName LIKE concat(concat('%',#{scheduleReq.nannyName}),'%')
+            AND jni.nannyPhone LIKE concat(concat('%',#{scheduleReq.nannyPhone}),'%')
+        </if>
+        <if test="-1 == scheduleReq.supplierId">
+            AND jt.teacherName LIKE concat(concat('%',#{scheduleReq.nannyName}),'%')
+            AND jt.teacherPhone LIKE concat(concat('%',#{scheduleReq.nannyPhone}),'%')
+        </if>
+        <if test="1 != scheduleReq.supplierId and -1 != scheduleReq.supplierId">
+            AND jcd.companyName LIKE concat(concat('%',#{scheduleReq.nannyName}),'%')
+            AND js.phone LIKE concat(concat('%',#{scheduleReq.nannyPhone}),'%')
+        </if>
+        <if test="0 != scheduleReq.customerId">
+            AND jot.customerId = #{scheduleReq.customerId}
+        </if>
+        <if test="0 != scheduleReq.nannyId">
+            AND jsn.nannyId = #{scheduleReq.nannyId}
+        </if>
+        <if test="0 != scheduleReq.payStatus">
+            AND jot.payStatus = #{scheduleReq.payStatus}
+        </if>
+        <if test="0 != scheduleReq.scheduleStatus">
+            AND jos.scheduleStatus = #{scheduleReq.scheduleStatus}
+        </if>
+        AND jos.orderType = #{scheduleReq.orderType}
+        <if test="0 != scheduleReq.nannyId">
+            AND jsn.nannyId = #{scheduleReq.nannyId}
+        </if>
+        <if test="0 != scheduleReq.shopId">
+            AND jot.shopId = #{scheduleReq.shopId}
+        </if>
+        <if test="0 == scheduleReq.shopId">
+            AND jas.adminId = #{scheduleReq.adminId}
+        </if>
+        LIMIT #{scheduleReq.page},#{scheduleReq.size}
+    </select>
+    <select id="getAllTempScheduleListCount" parameterType="com.summ.model.request.ScheduleReq"
+            resultType="java.lang.Integer">
+        SELECT COUNT(jos.scheduleId)
+        FROM j_order_schedule jos
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId=jos.scheduleId
+        LEFT JOIN j_dict_info d1 ON d1.ID = jos.scheduleStatus
+        LEFT JOIN j_dict_info d2 ON d2.ID = jos.payStatus
+        LEFT JOIN j_order_temp jot ON jot.orderId = jos.orderId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = jot.goodsId
+        LEFT JOIN j_customer jc ON jc.customerId = jot.customerId
+        LEFT JOIN j_customer_house jch ON jch.houseId = jot.houseId
+        LEFT JOIN j_shop jsh ON jsh.shopId = jot.shopId
+        <if test="1 == scheduleReq.supplierId">
+            LEFT JOIN j_nanny_info jni ON jni.nannyId = jsn.nannyId
+        </if>
+        <if test="-1 == scheduleReq.supplierId">
+            LEFT JOIN j_teacher jt ON jt.teacherId = jsn.nannyId
+        </if>
+        <if test="1 != scheduleReq.supplierId and -1 != scheduleReq.supplierId">
+            LEFT JOIN j_supplier js ON js.supplierId = jsn.nannyId
+            LEFT JOIN j_company_data jcd ON jcd.companyId=js.companyId
+        </if>
+        <if test="0 == scheduleReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = jot.shopId
+        </if>
+        WHERE jos.scheduleDate BETWEEN #{scheduleReq.startDate}
+        AND #{scheduleReq.endDate}
+        AND jos.isDel=16
+        AND jc.customerPhone LIKE concat(concat('%',#{scheduleReq.customerPhone}),'%')
+        AND jc.customerName LIKE concat(concat('%',#{scheduleReq.customerName}),'%')
+        AND jch.houseAddress LIKE concat(concat('%',#{scheduleReq.customerAddress}),'%')
+        <if test="1 == scheduleReq.supplierId">
+            AND jni.nannyName LIKE concat(concat('%',#{scheduleReq.nannyName}),'%')
+            AND jni.nannyPhone LIKE concat(concat('%',#{scheduleReq.nannyPhone}),'%')
+        </if>
+        <if test="-1 == scheduleReq.supplierId">
+            AND jt.teacherName LIKE concat(concat('%',#{scheduleReq.nannyName}),'%')
+            AND jt.teacherPhone LIKE concat(concat('%',#{scheduleReq.nannyPhone}),'%')
+        </if>
+        <if test="1 != scheduleReq.supplierId and -1 != scheduleReq.supplierId">
+            AND jcd.companyName LIKE concat(concat('%',#{scheduleReq.nannyName}),'%')
+            AND js.phone LIKE concat(concat('%',#{scheduleReq.nannyPhone}),'%')
+        </if>
+        <if test="0 != scheduleReq.customerId">
+            AND jot.customerId = #{scheduleReq.customerId}
+        </if>
+        <if test="0 != scheduleReq.nannyId">
+            AND jsn.nannyId = #{scheduleReq.nannyId}
+        </if>
+        <if test="0 != scheduleReq.payStatus">
+            AND jot.payStatus = #{scheduleReq.payStatus}
+        </if>
+        <if test="0 != scheduleReq.scheduleStatus">
+            AND jos.scheduleStatus = #{scheduleReq.scheduleStatus}
+        </if>
+        AND jos.orderType = #{scheduleReq.orderType}
+        <if test="0 != scheduleReq.nannyId">
+            AND jsn.nannyId = #{scheduleReq.nannyId}
+        </if>
+        <if test="0 != scheduleReq.shopId">
+            AND jot.shopId = #{scheduleReq.shopId}
+        </if>
+        <if test="0 == scheduleReq.shopId">
+            AND jas.adminId = #{scheduleReq.adminId}
+        </if>
+    </select>
+
+    <select id="getAllYearsScheduleList" parameterType="com.summ.model.request.ScheduleReq"
+            resultType="com.summ.model.response.ScheduleRes">
+        SELECT jos.*,jsn.nannyId,jsn.supplierId,d1.INFO AS scheduleStatusInfo,d2.INFO AS
+        payStatusInfo,d4.INFO AS
+        scheduleTypeInfo,jc.customerName,jc.customerPhone,jch.houseAddress,jsh.shopName
+        ,jni.nannyName,jni.nannyPhone
+        FROM j_order_schedule jos
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId=jos.scheduleId
+        LEFT JOIN j_dict_info d1 ON d1.ID = jos.scheduleStatus
+        LEFT JOIN j_dict_info d2 ON d2.ID = jos.payStatus
+        LEFT JOIN j_dict_info d4 ON d4.ID = jos.scheduleType
+        LEFT JOIN j_order_years jot ON jot.orderId = jos.orderId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = jot.goodsId
+        LEFT JOIN j_customer jc ON jc.customerId = jot.customerId
+        LEFT JOIN j_customer_house jch ON jch.houseId = jot.houseId
+        LEFT JOIN j_shop jsh ON jsh.shopId = jot.shopId
+        LEFT JOIN j_nanny_info jni ON jni.nannyId = jsn.nannyId
+        <if test="0 == scheduleReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = jot.shopId
+        </if>
+        WHERE jos.scheduleDate BETWEEN #{scheduleReq.startDate}
+        AND #{scheduleReq.endDate}
+        AND jos.isDel=16
+        AND jc.customerPhone LIKE concat(concat('%',#{scheduleReq.customerPhone}),'%')
+        AND jc.customerName LIKE concat(concat('%',#{scheduleReq.customerName}),'%')
+        AND jch.houseAddress LIKE concat(concat('%',#{scheduleReq.customerAddress}),'%')
+        AND jni.nannyName LIKE concat(concat('%',#{scheduleReq.nannyName}),'%')
+        AND jni.nannyPhone LIKE concat(concat('%',#{scheduleReq.nannyPhone}),'%')
+        <if test="0 != scheduleReq.customerId">
+            AND jot.customerId = #{scheduleReq.customerId}
+        </if>
+        <if test="0 != scheduleReq.nannyId">
+            AND jsn.nannyId = #{scheduleReq.nannyId}
+        </if>
+        <if test="0 != scheduleReq.payStatus">
+            AND jot.payStatus = #{scheduleReq.payStatus}
+        </if>
+        <if test="0 != scheduleReq.scheduleStatus">
+            AND jos.scheduleStatus = #{scheduleReq.scheduleStatus}
+        </if>
+        AND jos.orderType = #{scheduleReq.orderType}
+        <if test="0 != scheduleReq.shopId">
+            AND jot.shopId = #{scheduleReq.shopId}
+        </if>
+        <if test="0 == scheduleReq.shopId">
+            AND jas.adminId = #{scheduleReq.adminId}
+        </if>
+        LIMIT #{scheduleReq.page},#{scheduleReq.size}
+    </select>
+    <select id="getAllYearsScheduleListCount" parameterType="com.summ.model.request.ScheduleReq"
+            resultType="java.lang.Integer">
+        SELECT COUNT(jos.scheduleId)
+        FROM j_order_schedule jos
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId=jos.scheduleId
+        LEFT JOIN j_dict_info d1 ON d1.ID = jos.scheduleStatus
+        LEFT JOIN j_dict_info d2 ON d2.ID = jos.payStatus
+        LEFT JOIN j_dict_info d4 ON d4.ID = jos.scheduleType
+        LEFT JOIN j_order_years jot ON jot.orderId = jos.orderId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = jot.goodsId
+        LEFT JOIN j_customer jc ON jc.customerId = jot.customerId
+        LEFT JOIN j_customer_house jch ON jch.houseId = jot.houseId
+        LEFT JOIN j_shop jsh ON jsh.shopId = jot.shopId
+        LEFT JOIN j_nanny_info jni ON jni.nannyId = jsn.nannyId
+        <if test="0 == scheduleReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = jot.shopId
+        </if>
+        WHERE jos.scheduleDate BETWEEN #{scheduleReq.startDate}
+        AND #{scheduleReq.endDate}
+        AND jos.isDel=16
+        AND jc.customerPhone LIKE concat(concat('%',#{scheduleReq.customerPhone}),'%')
+        AND jc.customerName LIKE concat(concat('%',#{scheduleReq.customerName}),'%')
+        AND jch.houseAddress LIKE concat(concat('%',#{scheduleReq.customerAddress}),'%')
+        AND jni.nannyName LIKE concat(concat('%',#{scheduleReq.nannyName}),'%')
+        AND jni.nannyPhone LIKE concat(concat('%',#{scheduleReq.nannyPhone}),'%')
+        <if test="0 != scheduleReq.customerId">
+            AND jot.customerId = #{scheduleReq.customerId}
+        </if>
+        <if test="0 != scheduleReq.nannyId">
+            AND jsn.nannyId = #{scheduleReq.nannyId}
+        </if>
+        <if test="0 != scheduleReq.payStatus">
+            AND jot.payStatus = #{scheduleReq.payStatus}
+        </if>
+        <if test="0 != scheduleReq.scheduleStatus">
+            AND jos.scheduleStatus = #{scheduleReq.scheduleStatus}
+        </if>
+        AND jos.orderType = #{scheduleReq.orderType}
+        <if test="0 != scheduleReq.shopId">
+            AND jot.shopId = #{scheduleReq.shopId}
+        </if>
+        <if test="0 == scheduleReq.shopId">
+            AND jas.adminId = #{scheduleReq.adminId}
+        </if>
+    </select>
+    <select id="getAllMonthScheduleList" parameterType="com.summ.model.request.ScheduleReq"
+            resultType="com.summ.model.response.ScheduleRes">
+        SELECT jos.*,jsn.nannyId,jsn.supplierId,d1.INFO AS scheduleStatusInfo,d2.INFO AS
+        payStatusInfo,d4.INFO AS
+        scheduleTypeInfo,jc.customerName,jc.customerPhone,jch.houseAddress,jsh.shopName
+        ,jni.nannyName,jni.nannyPhone
+        FROM j_order_schedule jos
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId=jos.scheduleId
+        LEFT JOIN j_dict_info d1 ON d1.ID = jos.scheduleStatus
+        LEFT JOIN j_dict_info d2 ON d2.ID = jos.payStatus
+        LEFT JOIN j_dict_info d4 ON d4.ID = jos.scheduleType
+        LEFT JOIN j_order_month jot ON jot.orderId = jos.orderId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = jot.goodsId
+        LEFT JOIN j_customer jc ON jc.customerId = jot.customerId
+        LEFT JOIN j_customer_house jch ON jch.houseId = jot.houseId
+        LEFT JOIN j_shop jsh ON jsh.shopId = jot.shopId
+        LEFT JOIN j_nanny_info jni ON jni.nannyId = jsn.nannyId
+        <if test="0 == scheduleReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = jot.shopId
+        </if>
+        WHERE jos.scheduleDate BETWEEN #{scheduleReq.startDate}
+        AND #{scheduleReq.endDate}
+        AND jos.isDel=16
+        AND jc.customerPhone LIKE concat(concat('%',#{scheduleReq.customerPhone}),'%')
+        AND jc.customerName LIKE concat(concat('%',#{scheduleReq.customerName}),'%')
+        AND jch.houseAddress LIKE concat(concat('%',#{scheduleReq.customerAddress}),'%')
+        AND jni.nannyName LIKE concat(concat('%',#{scheduleReq.nannyName}),'%')
+        AND jni.nannyPhone LIKE concat(concat('%',#{scheduleReq.nannyPhone}),'%')
+        <if test="0 != scheduleReq.customerId">
+            AND jot.customerId = #{scheduleReq.customerId}
+        </if>
+        <if test="0 != scheduleReq.nannyId">
+            AND jsn.nannyId = #{scheduleReq.nannyId}
+        </if>
+        <if test="0 != scheduleReq.payStatus">
+            AND jot.payStatus = #{scheduleReq.payStatus}
+        </if>
+        <if test="0 != scheduleReq.scheduleStatus">
+            AND jos.scheduleStatus = #{scheduleReq.scheduleStatus}
+        </if>
+        AND jos.orderType = #{scheduleReq.orderType}
+        <if test="0 != scheduleReq.shopId">
+            AND jot.shopId = #{scheduleReq.shopId}
+        </if>
+        <if test="0 == scheduleReq.shopId">
+            AND jas.adminId = #{scheduleReq.adminId}
+        </if>
+        LIMIT #{scheduleReq.page},#{scheduleReq.size}
+    </select>
+    <select id="getAllMonthScheduleListCount" parameterType="com.summ.model.request.ScheduleReq"
+            resultType="java.lang.Integer">
+        SELECT COUNT(jos.scheduleId)
+        FROM j_order_schedule jos
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId=jos.scheduleId
+        LEFT JOIN j_dict_info d1 ON d1.ID = jos.scheduleStatus
+        LEFT JOIN j_dict_info d2 ON d2.ID = jos.payStatus
+        LEFT JOIN j_dict_info d4 ON d4.ID = jos.scheduleType
+        LEFT JOIN j_order_month jot ON jot.orderId = jos.orderId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = jot.goodsId
+        LEFT JOIN j_customer jc ON jc.customerId = jot.customerId
+        LEFT JOIN j_customer_house jch ON jch.houseId = jot.houseId
+        LEFT JOIN j_shop jsh ON jsh.shopId = jot.shopId
+        LEFT JOIN j_nanny_info jni ON jni.nannyId = jsn.nannyId
+        <if test="0 == scheduleReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = jot.shopId
+        </if>
+        WHERE jos.scheduleDate BETWEEN #{scheduleReq.startDate}
+        AND #{scheduleReq.endDate}
+        AND jos.isDel=16
+        AND jc.customerPhone LIKE concat(concat('%',#{scheduleReq.customerPhone}),'%')
+        AND jc.customerName LIKE concat(concat('%',#{scheduleReq.customerName}),'%')
+        AND jch.houseAddress LIKE concat(concat('%',#{scheduleReq.customerAddress}),'%')
+        AND jni.nannyName LIKE concat(concat('%',#{scheduleReq.nannyName}),'%')
+        AND jni.nannyPhone LIKE concat(concat('%',#{scheduleReq.nannyPhone}),'%')
+        <if test="0 != scheduleReq.customerId">
+            AND jot.customerId = #{scheduleReq.customerId}
+        </if>
+        <if test="0 != scheduleReq.nannyId">
+            AND jsn.nannyId = #{scheduleReq.nannyId}
+        </if>
+        <if test="0 != scheduleReq.payStatus">
+            AND jot.payStatus = #{scheduleReq.payStatus}
+        </if>
+        <if test="0 != scheduleReq.scheduleStatus">
+            AND jos.scheduleStatus = #{scheduleReq.scheduleStatus}
+        </if>
+        AND jos.orderType = #{scheduleReq.orderType}
+        <if test="0 != scheduleReq.shopId">
+            AND jot.shopId = #{scheduleReq.shopId}
+        </if>
+        <if test="0 == scheduleReq.shopId">
+            AND jas.adminId = #{scheduleReq.adminId}
+        </if>
+    </select>
+
+    <select id="getCustomerScheduleSum" parameterType="com.summ.model.request.ScheduleReq"
+            resultType="com.summ.model.response.CustomerBalanceWarnRes">
+        SELECT
+        jc.customerId,
+        jc.customerName,
+        jc.customerPhone,
+        js.shopId,
+        js.shopName,
+        jc.customerBalance,
+        j.scheduleDate,
+        SUM(CASE j.totalPrice
+        WHEN 0 THEN
+        CONVERT((j.endTime - j.startTime) / 2 * jgc.price,DECIMAL)
+        ELSE
+        j.totalPrice
+        END) AS totalPrice
+        FROM
+        j_order_schedule j
+        LEFT JOIN j_order_contract joc ON joc.orderId = j.orderId
+        LEFT JOIN j_customer jc ON jc.customerId = joc.customerId
+        LEFT JOIN j_shop js ON js.shopId = joc.shopId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = joc.goodsId
+        <if test="0 == scheduleReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = joc.shopId
+        </if>
+        WHERE
+        j.payStatus = 157
+        AND j.isDel=16
+        AND j.orderType = 163
+        AND j.scheduleDate BETWEEN #{scheduleReq.startDate}
+        AND #{scheduleReq.endDate}
+        <if test="0 != scheduleReq.customerId">
+            AND joc.customerId = #{scheduleReq.customerId}
+        </if>
+        AND jc.customerPhone LIKE concat(concat('%',#{scheduleReq.customerPhone}),'%')
+        AND jc.customerName LIKE concat(concat('%',#{scheduleReq.customerName}),'%')
+        <if test="0 != scheduleReq.shopId">
+            AND joc.shopId = #{scheduleReq.shopId}
+        </if>
+        <if test="0 == scheduleReq.shopId">
+            AND jas.adminId = #{scheduleReq.adminId}
+        </if>
+        GROUP BY
+        joc.customerId
+        ORDER BY j.scheduleDate
+        LIMIT #{scheduleReq.page},#{scheduleReq.size}
+    </select>
+    <select id="getCustomerScheduleSumCount" parameterType="com.summ.model.request.ScheduleReq"
+            resultType="java.lang.Integer">
+        SELECT
+        COUNT(DISTINCT(joc.customerId))
+        FROM
+        j_order_schedule j
+        LEFT JOIN j_order_contract joc ON joc.orderId = j.orderId
+        LEFT JOIN j_customer jc ON jc.customerId = joc.customerId
+        LEFT JOIN j_shop js ON js.shopId = joc.shopId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = joc.goodsId
+        <if test="0 == scheduleReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = joc.shopId
+        </if>
+        WHERE
+        j.payStatus = 157
+        AND j.isDel=16
+        AND j.orderType = 163
+        AND j.scheduleDate BETWEEN #{scheduleReq.startDate}
+        AND #{scheduleReq.endDate}
+        <if test="0 != scheduleReq.customerId">
+            AND joc.customerId = #{scheduleReq.customerId}
+        </if>
+        AND jc.customerPhone LIKE concat(concat('%',#{scheduleReq.customerPhone}),'%')
+        AND jc.customerName LIKE concat(concat('%',#{scheduleReq.customerName}),'%')
+        <if test="0 != scheduleReq.shopId">
+            AND joc.shopId = #{scheduleReq.shopId}
+        </if>
+        <if test="0 == scheduleReq.shopId">
+            AND jas.adminId = #{scheduleReq.adminId}
+        </if>
+    </select>
+    <select id="getCustomerSchedule" parameterType="com.summ.model.request.ScheduleReq"
+            resultType="com.summ.model.response.CustomerBalanceWarnRes">
+        SELECT
+        j.scheduleId,
+        jc.customerId,
+        jc.customerName,
+        jc.customerPhone,
+        js.shopId,
+        js.shopName,
+        jc.customerBalance,
+        j.scheduleDate,
+        CASE j.totalPrice
+        WHEN 0 THEN
+        CONVERT((j.endTime - j.startTime) / 2 * jgc.price,DECIMAL)
+        ELSE
+        j.totalPrice
+        END AS totalPrice
+        FROM
+        j_order_schedule j
+        LEFT JOIN j_order_contract joc ON joc.orderId = j.orderId
+        LEFT JOIN j_customer jc ON jc.customerId = joc.customerId
+        LEFT JOIN j_shop js ON js.shopId = joc.shopId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = joc.goodsId
+        <if test="0 == scheduleReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = joc.shopId
+        </if>
+        WHERE
+        j.payStatus = 157
+        AND j.isDel=16
+        AND j.orderType = 163
+        AND j.scheduleDate BETWEEN #{scheduleReq.startDate}
+        AND #{scheduleReq.endDate}
+        <if test="0 != scheduleReq.customerId">
+            AND joc.customerId = #{scheduleReq.customerId}
+        </if>
+        AND jc.customerPhone LIKE concat(concat('%',#{scheduleReq.customerPhone}),'%')
+        AND jc.customerName LIKE concat(concat('%',#{scheduleReq.customerName}),'%')
+        <if test="0 != scheduleReq.shopId">
+            AND joc.shopId = #{scheduleReq.shopId}
+        </if>
+        <if test="0 == scheduleReq.shopId">
+            AND jas.adminId = #{scheduleReq.adminId}
+        </if>
+        ORDER BY j.scheduleDate
+        LIMIT #{scheduleReq.page},#{scheduleReq.size}
+    </select>
+
+    <select id="getOrderScheduleUnCheckOut" resultType="com.summ.model.JOrderSchedule">
+        SELECT j.*
+        FROM j_order_schedule j
+        WHERE j.orderId=#{orderId}
+        AND j.orderType=#{orderType}
+        AND j.payStatus=157
+        AND j.isDel=16
+    </select>
+
+    <select id="getOrderScheduleToBeFinished" resultType="com.summ.model.JOrderSchedule">
+        SELECT j.*
+        FROM j_order_schedule j
+        WHERE j.orderId=#{orderId}
+        AND j.orderType=#{orderType}
+        AND j.scheduleStatus=152
+        AND j.isDel=16
+    </select>
+
+</mapper>

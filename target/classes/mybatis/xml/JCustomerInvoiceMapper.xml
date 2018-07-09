@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JCustomerInvoiceMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		invoiceId, customerId, invoiceType, invoiceMoney, contacter, phone, address, email, createTime, isDel
+	</sql>
+
+	<select id="getCustomerMaxInvoiceMoney" resultType="java.math.BigDecimal">
+		SELECT
+	customer_statment.chargeMoney - customer_invoice.invoiceMoney
+FROM
+	(
+		SELECT
+			SUM(jcs.chargeMoney) AS chargeMoney
+		FROM
+			j_customer_statment jcs
+		WHERE
+			jcs.statmentCustomerType IN (39, 177)
+		AND jcs.`status` = 53
+	) AS customer_statment,
+	(
+		SELECT
+					SUM(jci.invoiceMoney) AS invoiceMoney
+		FROM
+			j_customer_invoice jci
+	) AS customer_invoice
+	</select>
+
+	<select id="getCustomerPayMoney" resultType="java.math.BigDecimal">
+		SELECT
+			SUM(jcs.chargeMoney) AS chargeMoney
+		FROM
+			j_customer_statment jcs
+		WHERE
+			jcs.statmentCustomerType IN (39, 177)
+		AND jcs.`status` = 53
+	</select>
+
+</mapper>

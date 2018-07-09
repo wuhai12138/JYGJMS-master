@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JScheduleChangeApplyMapper">
+
+    <select id="getChangeByCustomer" resultType="com.summ.model.response.ScheduleChangeApplyRes">
+        SELECT
+        j.*, jdi1.INFO AS applyStatusInfo,
+        jdi2.INFO AS applyTypeInfo,
+        jc.customerName,
+        jc.customerPhone,
+        jos.scheduleDate AS orScheduleDate,
+        jos.endTime AS orEndTime,
+        jos.endTimeValue AS orEndTimeValue,
+        jos.startTime AS orStartTime,
+        jos.startTimeValue AS orStartTimeValue,
+        jch.houseAddress,
+        jgc.service
+        FROM
+        j_schedule_change_apply j
+        LEFT JOIN j_dict_info jdi1 ON jdi1.ID = j.applyStatus
+        LEFT JOIN j_dict_info jdi2 ON jdi2.ID = j.applyType
+        LEFT JOIN j_customer jc ON j.customerId = jc.customerId
+        INNER JOIN j_order_schedule jos ON j.scheduleId = jos.scheduleId
+        LEFT JOIN j_customer_house jch ON jos.houseId = jch.houseId
+        LEFT JOIN j_goods_contract jgc ON jos.goodsId = jgc.goodsId
+        where j.isDel=16
+        and j.customerID=#{0}
+    </select>
+
+    <select id="getChangeByNanny" resultType="com.summ.model.response.ScheduleChangeApplyRes">
+        SELECT
+        j.*, jdi1.INFO AS applyStatusInfo,
+        jdi2.INFO AS applyTypeInfo,
+        jc.customerName,
+        jc.customerPhone,
+        jos.scheduleDate AS orScheduleDate,
+        jos.endTime AS orEndTime,
+        jos.endTimeValue AS orEndTimeValue,
+        jos.startTime AS orStartTime,
+        jos.startTimeValue AS orStartTimeValue,
+        jch.houseAddress,
+        jgc.service
+        FROM
+        j_schedule_change_apply j
+        LEFT JOIN j_dict_info jdi1 ON jdi1.ID = j.applyStatus
+        LEFT JOIN j_dict_info jdi2 ON jdi2.ID = j.applyType
+        LEFT JOIN j_customer jc ON j.customerId = jc.customerId
+        INNER JOIN j_order_schedule jos ON j.scheduleId = jos.scheduleId
+        LEFT JOIN j_customer_house jch ON jos.houseId = jch.houseId
+        LEFT JOIN j_goods_contract jgc ON jos.goodsId = jgc.goodsId
+        where j.isDel=16
+        and j.nannyId=#{0}
+    </select>
+    <select id="getChangeList" parameterType="com.summ.model.request.ScheduleChangeApplyReq" resultType="com.summ.model.response.ScheduleChangeApplyRes">
+        SELECT
+        j.*, jdi1.INFO AS applyStatusInfo,
+        jdi2.INFO AS applyTypeInfo,
+        jc.customerName,
+        jc.customerPhone,
+        jos.scheduleDate AS orScheduleDate,
+        jos.endTime AS orEndTime,
+        jos.endTimeValue AS orEndTimeValue,
+        jos.startTime AS orStartTime,
+        jos.startTimeValue AS orStartTimeValue,
+        jch.houseAddress,
+        jgc.service,jni.nannyName,jni.nannyPhone
+        FROM
+        j_schedule_change_apply j
+        LEFT JOIN j_dict_info jdi1 ON jdi1.ID = j.applyStatus
+        LEFT JOIN j_dict_info jdi2 ON jdi2.ID = j.applyType
+        LEFT JOIN j_customer jc ON j.customerId = jc.customerId
+        LEFT JOIN j_nanny_info jni ON j.nannyId = jni.nannyId
+        INNER JOIN j_order_schedule jos ON j.scheduleId = jos.scheduleId
+        LEFT JOIN j_customer_house jch ON jos.houseId = jch.houseId
+        LEFT JOIN j_goods_contract jgc ON jos.goodsId = jgc.goodsId
+        where j.isDel=16
+        <if test="0!=scheduleChangeApplyReq.applyStatus">
+            AND j.applyStatus=#{scheduleChangeApplyReq.applyStatus}
+        </if>
+        <if test="0!=scheduleChangeApplyReq.applyType">
+            AND j.applyType=#{scheduleChangeApplyReq.applyType}
+        </if>
+        <if test="0!=scheduleChangeApplyReq.applyId">
+            AND j.applyId=#{scheduleChangeApplyReq.applyId}
+        </if>
+        <if test="0!=scheduleChangeApplyReq.scheduleId">
+            AND j.scheduleId=#{scheduleChangeApplyReq.scheduleId}
+        </if>
+        <if test="0!=scheduleChangeApplyReq.nannyId">
+            AND j.nannyId=#{scheduleChangeApplyReq.nannyId}
+        </if>
+        <if test="0!=scheduleChangeApplyReq.customerId">
+            AND j.customerId=#{scheduleChangeApplyReq.customerId}
+        </if>
+        AND jc.customerName LIKE concat(concat('%',#{scheduleChangeApplyReq.customerName}),'%')
+        AND jc.customerPhone LIKE concat(concat('%',#{scheduleChangeApplyReq.customerPhone}),'%')
+        AND jni.nannyName LIKE concat(concat('%',#{scheduleChangeApplyReq.nannyName}),'%')
+        AND jni.nannyPhone LIKE concat(concat('%',#{scheduleChangeApplyReq.nannyPhone}),'%')
+        limit #{scheduleChangeApplyReq.page},#{scheduleChangeApplyReq.size}
+    </select>
+    <select id="getChangeListCount" parameterType="com.summ.model.request.ScheduleChangeApplyReq" resultType="java.lang.Integer">
+        SELECT
+        count(j.applyId)
+        FROM
+        j_schedule_change_apply j
+        LEFT JOIN j_dict_info jdi1 ON jdi1.ID = j.applyStatus
+        LEFT JOIN j_dict_info jdi2 ON jdi2.ID = j.applyType
+        LEFT JOIN j_customer jc ON j.customerId = jc.customerId
+        LEFT JOIN j_nanny_info jni ON j.nannyId = jni.nannyId
+        INNER JOIN j_order_schedule jos ON j.scheduleId = jos.scheduleId
+        LEFT JOIN j_customer_house jch ON jos.houseId = jch.houseId
+        LEFT JOIN j_goods_contract jgc ON jos.goodsId = jgc.goodsId
+        where j.isDel=16
+        <if test="0!=scheduleChangeApplyReq.applyStatus">
+            AND j.applyStatus=#{scheduleChangeApplyReq.applyStatus}
+        </if>
+        <if test="0!=scheduleChangeApplyReq.applyType">
+            AND j.applyType=#{scheduleChangeApplyReq.applyType}
+        </if>
+        <if test="0!=scheduleChangeApplyReq.applyId">
+            AND j.applyId=#{scheduleChangeApplyReq.applyId}
+        </if>
+        <if test="0!=scheduleChangeApplyReq.scheduleId">
+            AND j.scheduleId=#{scheduleChangeApplyReq.scheduleId}
+        </if>
+        <if test="0!=scheduleChangeApplyReq.nannyId">
+            AND j.nannyId=#{scheduleChangeApplyReq.nannyId}
+        </if>
+        <if test="0!=scheduleChangeApplyReq.customerId">
+            AND j.customerId=#{scheduleChangeApplyReq.customerId}
+        </if>
+        AND jc.customerName LIKE concat(concat('%',#{scheduleChangeApplyReq.customerName}),'%')
+        AND jc.customerPhone LIKE concat(concat('%',#{scheduleChangeApplyReq.customerPhone}),'%')
+        AND jni.nannyName LIKE concat(concat('%',#{scheduleChangeApplyReq.nannyName}),'%')
+        AND jni.nannyPhone LIKE concat(concat('%',#{scheduleChangeApplyReq.nannyPhone}),'%')
+    </select>
+</mapper>

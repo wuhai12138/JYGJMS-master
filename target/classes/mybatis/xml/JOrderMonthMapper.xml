@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JOrderMonthMapper">
+
+    <select id="getOrderMonthList" parameterType="com.summ.model.request.OrderMonthReq" resultType="com.summ.model.response.OrderMonthRes">
+        SELECT joy.*,jc.customerName,jch.houseAddress,jdi.INFO AS orderStatusInfo,jc.customerPhone,jgc.service,
+        js.shopName,jcs.serviceDetail AS needString,jcs.serviceId,jdi2.INFO AS orderCloseStatusInfo,jdi3.INFO AS payStatusInfo,jc.customerBalance,jomp.orderMoney,jomp.nannySalary
+        FROM j_order_month joy
+        LEFT JOIN j_shop js ON js.shopId = joy.shopId
+        LEFT JOIN j_customer jc ON jc.customerId = joy.customerId
+        LEFT JOIN j_customer_house jch ON jch.houseId = joy.houseId
+        LEFT JOIN j_dict_info jdi ON jdi.ID = joy.orderStatus
+        LEFT JOIN j_dict_info jdi2 ON jdi2.ID = joy.orderCloseStatus
+        LEFT JOIN j_dict_info jdi3 ON jdi3.ID = joy.payStatus
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = joy.goodsId
+        LEFT JOIN j_customer_service jcs ON jcs.serviceId = joy.serviceId
+        LEFT JOIN j_order_month_prepaid jomp ON jomp.orderId=joy.orderId
+        <if test="''!=orderMonthReq.nannyName || 0!=orderMonthReq.nannyId">
+            LEFT JOIN j_order_schedule jos ON jos.orderId=joy.orderId
+            LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId=jos.scheduleId
+            LEFT JOIN j_nanny_info jni ON jni.nannyId=jsn.nannyId
+        </if>
+        <if test="0 == orderMonthReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = joy.shopId
+        </if>
+        WHERE joy.isDel = 16
+        AND jc.customerName LIKE concat(concat('%',#{orderMonthReq.customerName}),'%')
+        AND jc.customerPhone LIKE concat(concat('%',#{orderMonthReq.customerPhone}),'%')
+        AND jch.houseAddress LIKE concat(concat('%',#{orderMonthReq.houseAddress}),'%')
+        <if test="0!=orderMonthReq.nannyId">
+            AND jos.orderType=277
+            AND jni.nannyId=#{orderMonthReq.nannyId}
+        </if>
+        <if test="''!=orderMonthReq.nannyName">
+            AND jos.orderType=277
+            AND jni.nannyName LIKE concat(concat('%',#{orderMonthReq.nannyId}),'%')
+        </if>
+        <if test="0 != orderMonthReq.orderStatus">
+            AND joy.orderStatus = #{orderMonthReq.orderStatus}
+        </if>
+        <if test="0 != orderMonthReq.orderCloseStatus">
+            AND joy.orderCloseStatus = #{orderMonthReq.orderCloseStatus}
+        </if>
+        <if test="0 != orderMonthReq.payStatus">
+            AND joy.payStatus = #{orderMonthReq.payStatus}
+        </if>
+        <if test="0 != orderMonthReq.createId">
+            AND joy.createId = #{orderMonthReq.createId}
+        </if>
+        <if test="0 != orderMonthReq.shopId">
+            AND joy.shopId = #{orderMonthReq.shopId}
+        </if>
+        <if test="0 == orderMonthReq.shopId">
+            AND jas.adminId = #{orderMonthReq.adminId}
+        </if>
+        <if test="0 != orderMonthReq.customerId">
+            AND jc.customerId = #{orderMonthReq.customerId}
+        </if>
+        GROUP BY joy.orderId
+        ORDER BY joy.orderId DESC
+        LIMIT #{orderMonthReq.page},#{orderMonthReq.size}
+    </select>
+
+    <select id="getOrderMonthListCount" parameterType="com.summ.model.request.OrderMonthReq" resultType="java.lang.Integer">
+        SELECT COUNT(joy.orderId)
+        FROM j_order_month joy
+        LEFT JOIN j_shop js ON js.shopId = joy.shopId
+        LEFT JOIN j_customer jc ON jc.customerId = joy.customerId
+        LEFT JOIN j_customer_house jch ON jch.houseId = joy.houseId
+        LEFT JOIN j_dict_info jdi ON jdi.ID = joy.orderStatus
+        LEFT JOIN j_dict_info jdi2 ON jdi2.ID = joy.orderCloseStatus
+        LEFT JOIN j_dict_info jdi3 ON jdi3.ID = joy.payStatus
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = joy.goodsId
+        LEFT JOIN j_customer_service jcs ON jcs.houseId = jch.houseId
+        <if test="''!=orderMonthReq.nannyName || 0!=orderMonthReq.nannyId">
+            LEFT JOIN j_order_schedule jos ON jos.orderId=joy.orderId
+            LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId=jos.scheduleId
+            LEFT JOIN j_nanny_info jni ON jni.nannyId=jsn.nannyId
+        </if>
+        <if test="0 == orderMonthReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = joy.shopId
+        </if>
+        WHERE joy.isDel = 16
+        AND jc.customerName LIKE concat(concat('%',#{orderMonthReq.customerName}),'%')
+        AND jc.customerPhone LIKE concat(concat('%',#{orderMonthReq.customerPhone}),'%')
+        AND jch.houseAddress LIKE concat(concat('%',#{orderMonthReq.houseAddress}),'%')
+        <if test="0 != orderMonthReq.orderStatus">
+            AND joy.orderStatus = #{orderMonthReq.orderStatus}
+        </if>
+        <if test="0 != orderMonthReq.orderCloseStatus">
+            AND joy.orderCloseStatus = #{orderMonthReq.orderCloseStatus}
+        </if>
+        <if test="0!=orderMonthReq.nannyId">
+            AND jos.orderType=277
+            AND jni.nannyId=#{orderMonthReq.nannyId}
+        </if>
+        <if test="''!=orderMonthReq.nannyName">
+            AND jos.orderType=277
+            AND jni.nannyName LIKE concat(concat('%',#{orderMonthReq.nannyId}),'%')
+        </if>
+        <if test="0 != orderMonthReq.payStatus">
+            AND joy.payStatus = #{orderMonthReq.payStatus}
+        </if>
+        <if test="0 != orderMonthReq.createId">
+            AND joy.createId = #{orderMonthReq.createId}
+        </if>
+        <if test="0 != orderMonthReq.shopId">
+            AND joy.shopId = #{orderMonthReq.shopId}
+        </if>
+        <if test="0 == orderMonthReq.shopId">
+            AND jas.adminId = #{orderMonthReq.adminId}
+        </if>
+        <if test="0 != orderMonthReq.customerId">
+            AND jc.customerId = #{orderMonthReq.customerId}
+        </if>
+    </select>
+
+</mapper>

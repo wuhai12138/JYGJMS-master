@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JCustomerServiceMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		serviceId, customerId, productId, houseId, teacherId, adminId, shopId, adminConfirm, customerConfirm, serviceDetail, createTime, serviceName
+	</sql>
+
+	<select id="selectServiceById" resultType="com.summ.model.response.CustomerServiceRes">
+		SELECT j.*,d1.INFO AS adminConfirmInfo,d2.INFO AS customerConfirmInfo
+		FROM j_customer_service j
+		LEFT JOIN j_dict_info d1 ON d1.ID=j.adminConfirm
+		LEFT JOIN j_dict_info d2 ON d2.ID=j.customerConfirm
+		WHERE j.serviceId = #{0}
+		AND j.isDel=16
+	</select>
+
+	<select id="findServiceList" resultType="com.summ.model.response.serviceListRes">
+		SELECT j.serviceId,j.adminConfirm,j.customerConfirm,d1.INFO AS adminConfirmInfo,d2.INFO AS customerConfirmInfo,jch.*
+		FROM j_customer_service j
+		LEFT JOIN j_dict_info d1 ON d1.ID=j.adminConfirm
+		LEFT JOIN j_dict_info d2 ON d2.ID=j.customerConfirm
+		LEFT JOIN j_customer_house jch ON jch.houseId = j.houseId
+		WHERE j.customerId = #{0}
+		AND j.isDel=16
+	</select>
+
+	<select id="findServiceUnusedHouse" resultType="com.summ.model.JCustomerHouse">
+		SELECT *
+		FROM j_customer_house
+		WHERE customerId = #{0}
+		AND serviceId=0
+		AND isDel = 16
+	</select>
+</mapper>

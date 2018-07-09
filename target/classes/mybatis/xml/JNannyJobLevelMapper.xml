@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JNannyJobLevelMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		nannyJobLevelId, nannyId, jobLevelId, isDel
+	</sql>
+
+	<select id="getSelectedLevelList" resultType="com.summ.model.response.NannyJobLevelRes">
+		SELECT jnjl.nannyJobLevelId,j.INFO AS jobLevelIdInfo
+		FROM j_nanny_job_level jnjl
+		LEFT JOIN j_dict_info j ON jnjl.jobLevelId = j.ID
+		WHERE jnjl.nannyId = #{0}
+	</select>
+
+	<select id="getUnselectedLevelList" resultType="com.summ.model.JDictInfo">
+			SELECT ID,INFO
+			FROM
+			j_dict_info
+			WHERE
+			ID NOT IN (
+				SELECT jnjl.jobLevelId
+				FROM
+					j_nanny_job_level AS jnjl
+				WHERE jnjl.nannyId = ${nannyId})
+			AND
+			INFO LIKE "%${name}%"
+			AND TYPECODE=22
+	</select>
+
+</mapper>

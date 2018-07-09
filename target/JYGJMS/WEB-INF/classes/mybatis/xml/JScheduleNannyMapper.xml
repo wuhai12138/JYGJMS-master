@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JScheduleNannyMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		id, scheduleId, nannyId, assess, staring
+	</sql>
+
+	<select id="getScheduleComment" parameterType="com.summ.model.request.CommentReq"
+			resultType="com.summ.model.response.ScheduleRes">
+		SELECT j.*,jni.nannyName,jni.nannyPhone,jc.customerName,jc.customerPhone,jgc.service
+		FROM j_order_schedule j
+		LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId=j.scheduleId
+		LEFT JOIN j_nanny_info jni ON jni.nannyId=jsn.nannyId
+		LEFT JOIN j_customer jc ON jc.customerId=j.customerId
+		LEFT JOIN j_goods_contract jgc ON jgc.goodsId=j.goodsId
+		WHERE jsn.commentDate BETWEEN #{commentReq.startDate} AND #{commentReq.endDate}
+		<if test="0!=commentReq.staring">
+			AND jsn.staring=#{commentReq.staring}
+		</if>
+		limit #{commentReq.page},#{commentReq.size}
+	</select>
+	<select id="getScheduleCommentCount" parameterType="com.summ.model.request.CommentReq"
+			resultType="java.lang.Integer">
+		SELECT COUNT(jsn.id)
+		FROM j_order_schedule j
+		LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId=j.scheduleId
+		LEFT JOIN j_nanny_info jni ON jni.nannyId=jsn.nannyId
+		LEFT JOIN j_customer jc ON jc.customerId=j.customerId
+		LEFT JOIN j_goods_contract jgc ON jgc.goodsId=j.goodsId
+		WHERE jsn.commentDate BETWEEN #{commentReq.startDate} AND #{commentReq.endDate}
+		<if test="0!=commentReq.staring">
+			AND jsn.staring=#{commentReq.staring}
+		</if>
+	</select>
+
+</mapper>

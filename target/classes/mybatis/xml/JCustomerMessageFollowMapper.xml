@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JCustomerMessageFollowMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		followId, messageId, createDate, remark, adminId, followStatus, isDel
+	</sql>
+
+	<select id="getCustomerFeedbackFollowList" parameterType="java.lang.Integer" resultType="com.summ.model.response.CustomerFeedbackFollowRes">
+		SELECT j.*,jd.adminName,jdi.INFO AS followStatusInfo
+		FROM j_customer_message_follow j
+		LEFT JOIN j_admin jd ON jd.adminId=j.adminId
+		LEFT JOIN j_dict_info jdi ON jdi.ID = j.followStatus
+		WHERE j.messageId=#{0}
+		AND j.isDel=16
+	</select>
+</mapper>

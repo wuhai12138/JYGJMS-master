@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JCustomerWeiXinStatmentMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		tradeId, tradeTime, appId, mchId, childMchId, deviceNumber, transactionId, outTradeNo, customerId, transactionType,
+		transactionStatus, bank, currencyType, totalMoney, enterpriseRedPacketsMoney, enterpriseRedPacketsRefundMoney,
+		refundTradeNumber, refundNumber, refundMoney, refundType, refundStatus, goodsName, goodsData, poundage, rate,
+	</sql>
+
+    <select id="getWeiXinStatmentListByDate" parameterType="com.summ.model.request.CustomerStatmentReq"
+            resultType="com.summ.model.JCustomerWeiXinStatment">
+		SELECT j.*,jdi.INFO AS checkingInfo
+		FROM j_customer_wei_xin_statment j
+		LEFT JOIN j_dict_info jdi ON jdi.ID=j.checking
+		where
+		j.tradeTime BETWEEN #{customerStatmentReq.startDate} AND #{customerStatmentReq.endDate}
+		AND j.isDel=16
+	</select>
+</mapper>

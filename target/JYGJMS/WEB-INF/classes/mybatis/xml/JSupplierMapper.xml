@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JSupplierMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		supplierId, name, address, phone, contect, createTime, isDel
+	</sql>
+
+	<select id="getSupplierList" parameterType="com.summ.model.request.SupplierReq" resultType="com.summ.model.response.SupplierListRes">
+		SELECT js.*,jdi.INFO AS supplierStatusInfo,jcd.*
+		FROM j_supplier js
+		LEFT JOIN j_dict_info jdi ON jdi.ID = js.supplierStatus
+		LEFT JOIN j_company_data jcd ON jcd.companyId = js.companyId
+		WHERE
+		jcd.companyName LIKE concat(concat('%',#{supplierReq.supplierName}),'%')
+		AND js.phone LIKE concat(concat('%',#{supplierReq.supplierPhone}),'%')
+		AND js.isDel=16
+		<if test="0!=supplierReq.supplierId">
+			AND js.supplierId = #{supplierReq.supplierId}
+		</if>
+		<if test="0!=supplierReq.supplierStatus">
+			AND js.supplierStatus = #{supplierReq.supplierStatus}
+		</if>
+		AND js.supplierId>1
+		limit #{supplierReq.page},#{supplierReq.size}
+	</select>
+	<select id="getSupplierDetail" parameterType="java.lang.Integer" resultType="com.summ.model.response.SupplierListRes">
+		SELECT js.*,jdi.INFO AS supplierStatusInfo,ja.areaName AS areaIdInfo,jcd.*
+		FROM j_supplier js
+		LEFT JOIN j_dict_info jdi ON jdi.ID = js.supplierStatus
+		LEFT JOIN j_company_data jcd ON jcd.companyId = js.companyId
+		LEFT JOIN j_area ja ON ja.areaId = js.areaId
+		WHERE
+		js.supplierId=#{0}
+		AND js.isDel=16
+	</select>
+	<select id="getSupplierListCount" parameterType="com.summ.model.request.SupplierReq" resultType="java.lang.Integer">
+		SELECT count(js.supplierId)
+		FROM j_supplier js
+		LEFT JOIN j_dict_info jdi ON jdi.ID = js.supplierStatus
+		LEFT JOIN j_company_data jcd ON jcd.companyId = js.companyId
+		WHERE
+		jcd.companyName LIKE concat(concat('%',#{supplierReq.supplierName}),'%')
+		AND js.phone LIKE concat(concat('%',#{supplierReq.supplierPhone}),'%')
+		<if test="0!=supplierReq.supplierId">
+			AND js.supplierId = #{supplierReq.supplierId}
+		</if>
+		<if test="0!=supplierReq.supplierStatus">
+			AND js.supplierStatus = #{supplierReq.supplierStatus}
+		</if>
+		AND js.isDel=16
+	</select>
+
+
+</mapper>

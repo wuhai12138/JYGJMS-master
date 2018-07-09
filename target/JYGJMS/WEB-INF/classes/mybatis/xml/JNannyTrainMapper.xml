@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JNannyTrainMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		nannyTrainId, nannyId, trainId, isDel
+	</sql>
+
+    <select id="getUnselectedTrainList" resultType="com.summ.model.JTrain">
+		SELECT trainId,trainName
+		FROM
+			j_train
+		WHERE
+			trainId NOT IN (
+				SELECT jnt.trainId
+				FROM
+				j_nanny_train AS jnt
+				WHERE jnt.nannyId = ${nannyId})
+		AND
+			trainName LIKE "%${trainName}%"
+	</select>
+
+	<select id="getSelectedTrainList" resultType="com.summ.model.response.NannyTrainRes">
+		SELECT jnt.nannyTrainId,jt.trainName AS trainIdInfo
+		FROM j_nanny_train jnt
+		LEFT JOIN j_train jt ON jnt.trainId = jt.trainId
+		WHERE jnt.nannyId = #{0}
+	</select>
+
+</mapper>

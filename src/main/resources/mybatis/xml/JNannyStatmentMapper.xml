@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JNannyStatmentMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		 statmentNanny, nannyId, scheduleId, orderId, shopId, houseId, customerId, statmentNannyType, statmentMoney, orderType, goodsId, serviceTime, serviceTimeLength, serviceDate, remark
+	</sql>
+
+    <select id="getNannyStatmentList" parameterType="com.summ.model.request.NannyStatmentReq"
+            resultType="com.summ.model.response.NannyStatmentRes">
+        SELECT a.nannyId,a.nannyName,a.nannyPhone,a.shopName,a.NannyUnitPrice,a.shopId,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '162' THEN
+        a.statmentMoney
+        ELSE
+        0
+        END
+        ) AS `orderContractMoney`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '162' THEN
+        a.serviceTimeLength
+        ELSE
+        0
+        END
+        ) AS `orderContractTimes`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '166' THEN
+        a.statmentMoney
+        ELSE
+        0
+        END
+        ) AS `orderTempMoney`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '166' THEN
+        a.serviceTimeLength
+        ELSE
+        0
+        END
+        ) AS `orderTempTimes`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '167' THEN
+        a.statmentMoney
+        ELSE
+        0
+        END
+        ) AS `orderGrouponMoney`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '167' THEN
+        a.serviceTimeLength
+        ELSE
+        0
+        END
+        ) AS `orderGrouponTimes`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '159' THEN
+        a.statmentMoney
+        ELSE
+        0
+        END
+        ) AS `reward`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '160' THEN
+        a.statmentMoney
+        ELSE
+        0
+        END
+        ) AS `punishment`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '161' THEN
+        a.statmentMoney
+        ELSE
+        0
+        END
+        ) AS `orderRefund`
+        FROM
+        (
+        SELECT
+        j.serviceDate,
+        j.nannyId,
+        j.statmentNannyType,
+        jni.nannyName,
+        jni.nannyPhone,
+        js.shopName,
+        js.shopId,
+        jdi.INFO AS NannyUnitPrice,
+        SUM(j.statmentMoney) AS statmentMoney,
+        SUM(j.serviceTimeLength) AS serviceTimeLength
+        FROM
+        j_nanny_statment j
+        LEFT JOIN j_nanny_info jni ON jni.nannyId = j.nannyId
+        LEFT JOIN j_shop js ON js.shopId = j.shopId
+        LEFT JOIN j_dict_info jdi ON jdi.ID = jni.nannyLevel
+        <if test="0 == nannyStatmentReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = j.shopId
+        </if>
+        WHERE j.serviceDate BETWEEN #{nannyStatmentReq.startDate}
+        AND #{nannyStatmentReq.endDate}
+        AND j.isDel=16
+        <if test="''!=nannyStatmentReq.nannyName">
+            AND jni.nannyName LIKE concat(concat('%',#{nannyStatmentReq.nannyName}),'%')
+        </if>
+        <if test="''!=nannyStatmentReq.nannyPhone">
+            AND jni.nannyPhone LIKE concat(concat('%',#{nannyStatmentReq.nannyPhone}),'%')
+        </if>
+        <if test="0!=nannyStatmentReq.nannyId">
+            AND j.nannyId = #{nannyStatmentReq.nannyId}
+        </if>
+        <if test="0!=nannyStatmentReq.shopId">
+            AND j.shopId = #{nannyStatmentReq.shopId}
+        </if>
+        <if test="0 == nannyStatmentReq.shopId">
+            AND jas.adminId = #{nannyStatmentReq.adminId}
+        </if>
+        GROUP BY
+        j.nannyId,
+        j.statmentNannyType,
+        j.shopId
+        ) AS a
+        GROUP BY
+        a.nannyId,a.shopName
+        ORDER BY a.serviceDate
+        limit #{nannyStatmentReq.page},#{nannyStatmentReq.size}
+    </select>
+    <select id="getNannyStatmentListCount" parameterType="com.summ.model.request.NannyStatmentReq"
+            resultType="java.lang.Integer">
+        SELECT count(1)
+        FROM
+        (
+        SELECT a.nannyId,a.nannyName,a.nannyPhone,a.shopName,a.NannyUnitPrice,a.shopId,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '162' THEN
+        a.statmentMoney
+        ELSE
+        0
+        END
+        ) AS `orderContractMoney`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '162' THEN
+        a.serviceTimeLength
+        ELSE
+        0
+        END
+        ) AS `orderContractTimes`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '166' THEN
+        a.statmentMoney
+        ELSE
+        0
+        END
+        ) AS `orderTempMoney`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '166' THEN
+        a.serviceTimeLength
+        ELSE
+        0
+        END
+        ) AS `orderTempTimes`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '167' THEN
+        a.statmentMoney
+        ELSE
+        0
+        END
+        ) AS `orderGrouponMoney`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '167' THEN
+        a.serviceTimeLength
+        ELSE
+        0
+        END
+        ) AS `orderGrouponTimes`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '159' THEN
+        a.statmentMoney
+        ELSE
+        0
+        END
+        ) AS `reward`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '160' THEN
+        a.statmentMoney
+        ELSE
+        0
+        END
+        ) AS `punishment`,
+        MAX(
+        CASE a.statmentNannyType
+        WHEN '161' THEN
+        a.statmentMoney
+        ELSE
+        0
+        END
+        ) AS `orderRefund`
+        FROM
+        (
+        SELECT
+        j.serviceDate,
+        j.nannyId,
+        j.statmentNannyType,
+        jni.nannyName,
+        jni.nannyPhone,
+        js.shopName,
+        js.shopId,
+        jdi.INFO AS NannyUnitPrice,
+        SUM(j.statmentMoney) AS statmentMoney,
+        SUM(j.serviceTimeLength) AS serviceTimeLength
+        FROM
+        j_nanny_statment j
+        LEFT JOIN j_nanny_info jni ON jni.nannyId = j.nannyId
+        LEFT JOIN j_shop js ON js.shopId = j.shopId
+        LEFT JOIN j_dict_info jdi ON jdi.ID = jni.nannyLevel
+        <if test="0 == nannyStatmentReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = j.shopId
+        </if>
+        WHERE j.serviceDate BETWEEN #{nannyStatmentReq.startDate}
+        AND #{nannyStatmentReq.endDate}
+        AND j.isDel=16
+        <if test="''!=nannyStatmentReq.nannyName">
+            AND jni.nannyName LIKE concat(concat('%',#{nannyStatmentReq.nannyName}),'%')
+        </if>
+        <if test="''!=nannyStatmentReq.nannyPhone">
+            AND jni.nannyPhone LIKE concat(concat('%',#{nannyStatmentReq.nannyPhone}),'%')
+        </if>
+        <if test="0!=nannyStatmentReq.nannyId">
+            AND j.nannyId = #{nannyStatmentReq.nannyId}
+        </if>
+        <if test="0!=nannyStatmentReq.shopId">
+            AND j.shopId = #{nannyStatmentReq.shopId}
+        </if>
+        <if test="0 == nannyStatmentReq.shopId">
+            AND jas.adminId = #{nannyStatmentReq.adminId}
+        </if>
+        GROUP BY
+        j.nannyId,
+        j.statmentNannyType,
+        j.shopId
+        ) AS a
+        GROUP BY
+        a.nannyId,a.shopName
+        ORDER BY a.serviceDate
+        ) b
+    </select>
+
+    <select id="getNannyStatmentDetail" parameterType="java.lang.String"
+            resultType="com.summ.model.response.NannyStatmentDetailRes">
+        SELECT
+        j.*, jgc.service,ja.adminName,
+        jdi.INFO AS statmentNannyTypeInfo,
+        jdi2.INFO AS reasonInfo,
+        jc.customerName,
+        js.shopName,
+        jch.houseAddress,jni.nannyName,jni.nannyPhone
+        FROM
+        j_nanny_statment j
+        <if test="0 == nannyStatmentDetailReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = j.shopId
+        </if>
+        LEFT JOIN j_admin ja ON ja.adminId=j.adminId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = j.goodsId
+        LEFT JOIN j_customer jc ON jc.customerId = j.customerId
+        LEFT JOIN j_customer_house jch ON jch.houseId = j.houseId
+        LEFT JOIN j_dict_info jdi ON jdi.ID = j.statmentNannyType
+        LEFT JOIN j_dict_info jdi2 ON jdi2.ID = j.reason
+        LEFT JOIN j_shop js ON js.shopId = j.shopId
+        LEFT JOIN j_nanny_info jni ON jni.nannyId=j.nannyId
+        WHERE 1=1
+        <if test="0 != nannyStatmentDetailReq.nannyId">
+            AND j.nannyId = #{nannyStatmentDetailReq.nannyId}
+        </if>
+        AND j.serviceDate BETWEEN #{nannyStatmentDetailReq.startDate}
+        AND #{nannyStatmentDetailReq.endDate}
+        AND j.isDel=16
+        <if test="0 != nannyStatmentDetailReq.shopId">
+            AND j.shopId = #{nannyStatmentDetailReq.shopId}
+        </if>
+        <if test="0 != nannyStatmentDetailReq.statmentNannyType">
+            AND j.statmentNannyType = #{nannyStatmentDetailReq.statmentNannyType}
+        </if>
+        <if test="0 == nannyStatmentDetailReq.shopId">
+            AND jas.adminId = #{nannyStatmentDetailReq.adminId}
+        </if>
+        <if test="0 != nannyStatmentDetailReq.reason">
+            AND j.reason = #{nannyStatmentDetailReq.reason}
+        </if>
+        ORDER BY j.serviceDate,j.serviceTime
+        limit #{nannyStatmentDetailReq.page},#{nannyStatmentDetailReq.size}
+    </select>
+
+    <select id="getNannyStatmentDetailCount" parameterType="com.summ.model.request.NannyStatmentDetailReq"
+            resultType="java.lang.Integer">
+        SELECT
+        count(j.statmentId)
+        FROM
+        j_nanny_statment j
+        <if test="0 == nannyStatmentDetailReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = j.shopId
+        </if>
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = j.goodsId
+        LEFT JOIN j_customer jc ON jc.customerId = j.customerId
+        LEFT JOIN j_customer_house jch ON jch.houseId = j.houseId
+        LEFT JOIN j_dict_info jdi ON jdi.ID = j.statmentNannyType
+        LEFT JOIN j_shop js ON js.shopId = j.shopId
+        WHERE 1=1
+        AND j.isDel=16
+        <if test="0 != nannyStatmentDetailReq.nannyId">
+            AND j.nannyId = #{nannyStatmentDetailReq.nannyId}
+        </if>
+        AND j.serviceDate BETWEEN #{nannyStatmentDetailReq.startDate}
+        AND #{nannyStatmentDetailReq.endDate}
+        <if test="0 != nannyStatmentDetailReq.shopId">
+            AND j.shopId = #{nannyStatmentDetailReq.shopId}
+        </if>
+        <if test="0 != nannyStatmentDetailReq.statmentNannyType">
+            AND j.statmentNannyType = #{nannyStatmentDetailReq.statmentNannyType}
+        </if>
+        <if test="0 != nannyStatmentDetailReq.reason">
+            AND j.reason = #{nannyStatmentDetailReq.reason}
+        </if>
+        <if test="0 == nannyStatmentDetailReq.shopId">
+            AND jas.adminId = #{nannyStatmentDetailReq.adminId}
+        </if>
+    </select>
+
+    <select id="getNannyStatmentRewardsAndPunishmentsDetail" parameterType="java.util.Map"
+            resultType="com.summ.model.response.NannyStatmentDetailRes">
+        SELECT
+        j.*, jgc.service,ja.adminName,
+        jdi.INFO AS statmentNannyTypeInfo,
+        jdi2.INFO AS reasonInfo,
+        jc.customerName,
+        jc.customerPhone,
+        js.shopName,
+        jch.houseAddress,jni.nannyName,jni.nannyPhone
+        FROM
+        j_nanny_statment j
+        <if test="0 == map.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = j.shopId
+        </if>
+        LEFT JOIN j_admin ja ON ja.adminId=j.adminId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = j.goodsId
+        LEFT JOIN j_customer jc ON jc.customerId = j.customerId
+        LEFT JOIN j_customer_house jch ON jch.houseId = j.houseId
+        LEFT JOIN j_dict_info jdi ON jdi.ID = j.statmentNannyType
+        LEFT JOIN j_dict_info jdi2 ON jdi2.ID = j.reason
+        LEFT JOIN j_shop js ON js.shopId = j.shopId
+        LEFT JOIN j_nanny_info jni ON jni.nannyId=j.nannyId
+        WHERE 1=1
+        AND j.isDel=16
+        <if test="0 != map.nannyId">
+            AND j.nannyId = #{map.nannyId}
+        </if>
+        AND j.serviceDate BETWEEN #{map.startDate}
+        AND #{map.endDate}
+        <if test="0 != map.shopId">
+            AND j.shopId = #{map.shopId}
+        </if>
+        AND j.statmentNannyType IN
+        <foreach collection="map.statmentNannyType" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="0 == map.shopId">
+            AND jas.adminId = #{map.adminId}
+        </if>
+        <if test="0 != map.reason">
+            AND j.reason = #{map.reason}
+        </if>
+        ORDER BY j.serviceDate
+        limit #{map.page},#{map.size}
+    </select>
+
+    <select id="getNannyStatmentRewardsAndPunishmentsDetailCount" parameterType="java.util.Map"
+            resultType="java.lang.Integer">
+        SELECT
+        count(j.statmentId)
+        FROM
+        j_nanny_statment j
+        <if test="0 == map.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = j.shopId
+        </if>
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId = j.goodsId
+        LEFT JOIN j_customer jc ON jc.customerId = j.customerId
+        LEFT JOIN j_customer_house jch ON jch.houseId = j.houseId
+        LEFT JOIN j_dict_info jdi ON jdi.ID = j.statmentNannyType
+        LEFT JOIN j_shop js ON js.shopId = j.shopId
+        WHERE 1=1
+        AND j.isDel=16
+        <if test="0 != map.nannyId">
+            AND j.nannyId = #{map.nannyId}
+        </if>
+        AND j.serviceDate BETWEEN #{map.startDate}
+        AND #{map.endDate}
+        <if test="0 != map.shopId">
+            AND j.shopId = #{map.shopId}
+        </if>
+        AND j.statmentNannyType IN
+        <foreach collection="map.statmentNannyType" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="0 != map.reason">
+            AND j.reason = #{map.reason}
+        </if>
+        <if test="0 == map.shopId">
+            AND jas.adminId = #{map.adminId}
+        </if>
+    </select>
+
+    <select id="getNannyStatmentByScheduleId" resultType="com.summ.model.JNannyStatment">
+        SELECT j.*
+        FROM j_nanny_statment j
+        WHERE j.scheduleId=#{0}
+        AND j.isDel=16
+    </select>
+
+</mapper>

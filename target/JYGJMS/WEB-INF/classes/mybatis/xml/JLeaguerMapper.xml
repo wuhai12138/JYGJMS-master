@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JLeaguerMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		leaguerId, name, address, phone, contect, leaguerStatus, contacter, provinceId, cityId, areaId, remark, registerAddress, creditCode, businessScope, businessStartDate, businessEndDate, legalPerson, idCard, idValidDate, depositBank, bankAccount, businessLicense, idCardBefore, idCardAfter, createTime, isDel
+	</sql>
+
+	<select id="getLeaguerList" parameterType="com.summ.model.request.LeaguerReq" resultType="com.summ.model.response.LeaguerListRes">
+		SELECT js.*,jdi.INFO AS leaguerStatusInfo,jcd.*
+		FROM j_leaguer js
+		LEFT JOIN j_dict_info jdi ON jdi.ID = js.leaguerStatus
+		LEFT JOIN j_company_data jcd ON jcd.companyId = js.companyId
+		WHERE
+		jcd.companyName LIKE concat(concat('%',#{leaguerReq.leaguerName}),'%')
+		AND js.phone LIKE concat(concat('%',#{leaguerReq.leaguerPhone}),'%')
+		<if test="0!=leaguerReq.leaguerId">
+			AND js.leaguerId = #{leaguerReq.leaguerId}
+		</if>
+		<if test="0!=leaguerReq.leaguerStatus">
+			AND js.leaguerStatus = #{leaguerReq.leaguerStatus}
+		</if>
+		AND js.isDel=16
+		limit #{leaguerReq.page},#{leaguerReq.size}
+	</select>
+	<select id="getLeaguerDetail" parameterType="java.lang.Integer" resultType="com.summ.model.response.LeaguerListRes">
+		SELECT js.*,jdi.INFO AS leaguerStatusInfo,ja.areaName AS areaIdInfo,jcd.*
+		FROM j_leaguer js
+		LEFT JOIN j_dict_info jdi ON jdi.ID = js.leaguerStatus
+		LEFT JOIN j_company_data jcd ON jcd.companyId = js.companyId
+		LEFT JOIN j_area ja ON ja.areaId = js.areaId
+		WHERE
+		js.leaguerId=#{0}
+		AND js.isDel=16
+	</select>
+	<select id="getLeaguerListCount" parameterType="com.summ.model.request.LeaguerReq" resultType="java.lang.Integer">
+		SELECT count(js.leaguerId)
+		FROM j_leaguer js
+		LEFT JOIN j_dict_info jdi ON jdi.ID = js.leaguerStatus
+		LEFT JOIN j_company_data jcd ON jcd.companyId = js.companyId
+		WHERE
+		jcd.companyName LIKE concat(concat('%',#{leaguerReq.leaguerName}),'%')
+		AND js.phone LIKE concat(concat('%',#{leaguerReq.leaguerPhone}),'%')
+		<if test="0!=leaguerReq.leaguerId">
+			AND js.leaguerId = #{leaguerReq.leaguerId}
+		</if>
+		<if test="0!=leaguerReq.leaguerStatus">
+			AND js.leaguerStatus = #{leaguerReq.leaguerStatus}
+		</if>
+		AND js.isDel=16
+	</select>
+</mapper>

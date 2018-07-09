@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JTeacherStatmentMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		statmentId, statmentNanny, teacherId, scheduleId, orderId, shopId, houseId, customerId, statmentTeacherType, statmentMoney, orderType, goodsId, serviceTime, serviceTimeLength, serviceDate, reason, createDate, remark, adminId
+	</sql>
+
+	<select id="getTeacherStatmentDetail" parameterType="com.summ.model.request.TeacherStatmentDetailReq"
+			resultType="com.summ.model.response.TeacherStatmentDetailRes">
+		SELECT
+		j.*, jgc.service,ja.adminName,
+		jdi.INFO AS statmentTeacherTypeInfo,
+		jdi2.INFO AS reasonInfo,
+		jc.customerName,
+		js.shopName,
+		jch.houseAddress,jni.teacherName,jni.teacherPhone
+		FROM
+		j_teacher_statment j
+		<if test="0 == teacherStatmentDetailReq.shopId">
+			LEFT JOIN j_admin_shop jas ON jas.shopId = j.shopId
+		</if>
+		LEFT JOIN j_admin ja ON ja.adminId=j.adminId
+		LEFT JOIN j_goods_contract jgc ON jgc.goodsId = j.goodsId
+		LEFT JOIN j_customer jc ON jc.customerId = j.customerId
+		LEFT JOIN j_customer_house jch ON jch.houseId = j.houseId
+		LEFT JOIN j_dict_info jdi ON jdi.ID = j.statmentTeacherType
+		LEFT JOIN j_dict_info jdi2 ON jdi2.ID = j.reason
+		LEFT JOIN j_shop js ON js.shopId = j.shopId
+		LEFT JOIN j_teacher jni ON jni.teacherId=j.teacherId
+		WHERE 1=1
+		AND j.isDel=16
+		<if test="0 != teacherStatmentDetailReq.teacherId">
+			AND j.teacherId = #{teacherStatmentDetailReq.teacherId}
+		</if>
+		AND j.serviceDate BETWEEN #{teacherStatmentDetailReq.startDate}
+		AND #{teacherStatmentDetailReq.endDate}
+		<if test="0 != teacherStatmentDetailReq.shopId">
+			AND j.shopId = #{teacherStatmentDetailReq.shopId}
+		</if>
+		<if test="0 != teacherStatmentDetailReq.statmentTeacherType">
+			AND j.statmentTeacherType = #{teacherStatmentDetailReq.statmentTeacherType}
+		</if>
+		<if test="0 == teacherStatmentDetailReq.shopId">
+			AND jas.adminId = #{teacherStatmentDetailReq.adminId}
+		</if>
+		<if test="0 != teacherStatmentDetailReq.reason">
+			AND j.reason = #{teacherStatmentDetailReq.reason}
+		</if>
+		ORDER BY j.serviceDate,j.serviceTime
+		limit #{teacherStatmentDetailReq.page},#{teacherStatmentDetailReq.size}
+	</select>
+
+	<select id="getTeacherStatmentDetailCount" parameterType="com.summ.model.request.TeacherStatmentDetailReq"
+			resultType="java.lang.Integer">
+		SELECT
+		count(j.statmentId)
+		FROM
+		j_teacher_statment j
+		<if test="0 == teacherStatmentDetailReq.shopId">
+			LEFT JOIN j_admin_shop jas ON jas.shopId = j.shopId
+		</if>
+		LEFT JOIN j_goods_contract jgc ON jgc.goodsId = j.goodsId
+		LEFT JOIN j_customer jc ON jc.customerId = j.customerId
+		LEFT JOIN j_customer_house jch ON jch.houseId = j.houseId
+		LEFT JOIN j_dict_info jdi ON jdi.ID = j.statmentTeacherType
+		LEFT JOIN j_shop js ON js.shopId = j.shopId
+		WHERE 1=1
+		AND j.isDel=16
+		<if test="0 != teacherStatmentDetailReq.teacherId">
+			AND j.teacherId = #{teacherStatmentDetailReq.teacherId}
+		</if>
+		AND j.serviceDate BETWEEN #{teacherStatmentDetailReq.startDate}
+		AND #{teacherStatmentDetailReq.endDate}
+		<if test="0 != teacherStatmentDetailReq.shopId">
+			AND j.shopId = #{teacherStatmentDetailReq.shopId}
+		</if>
+		<if test="0 != teacherStatmentDetailReq.statmentTeacherType">
+			AND j.statmentTeacherType = #{teacherStatmentDetailReq.statmentTeacherType}
+		</if>
+		<if test="0 != teacherStatmentDetailReq.reason">
+			AND j.reason = #{teacherStatmentDetailReq.reason}
+		</if>
+		<if test="0 == teacherStatmentDetailReq.shopId">
+			AND jas.adminId = #{teacherStatmentDetailReq.adminId}
+		</if>
+	</select>
+</mapper>

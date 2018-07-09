@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JTeacherReVisitMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		reVisitId, customerId, orderId, houseId, shopId, teacherId, planVisitDate, realVisitDate, remark, reVisitStatus, isDel, createId, createDate
+	</sql>
+
+	<select id="getRevisitTeacherByCustomer" parameterType="java.lang.Integer"
+			resultType="com.summ.model.JTeacher">
+		SELECT j.*
+		FROM j_teacher j
+		LEFT JOIN j_order_contract joc ON joc.teacherId=j.teacherId
+		WHERE joc.houseId=#{0}
+		AND j.teacherStatus=56
+		AND j.isDel=16
+		GROUP BY j.teacherId
+	</select>
+
+</mapper>

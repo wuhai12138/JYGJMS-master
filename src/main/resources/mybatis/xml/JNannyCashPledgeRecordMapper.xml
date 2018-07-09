@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JNannyCashPledgeRecordMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		id, nannyId, scheduleId, orderId, shopId, money, createDate, cashPledgeBalance, isDel
+	</sql>
+
+	<select id="getNannyCashPledgeList" resultType="com.summ.model.response.NannyCashPledgeRes">
+		SELECT a.*,js.shopName,jdi.INFO AS statusInfo,d2.INFO AS reasonInfo,d3.INFO AS paymentTypeInfo,d4.INFO AS operateTypeInfo
+		FROM j_nanny_cash_pledge_record a
+		LEFT JOIN j_shop js ON js.shopId=a.shopId
+		left JOIN  j_dict_info jdi ON jdi.ID=a.status
+		left JOIN  j_dict_info d2 ON d2.ID=a.reason
+		left JOIN  j_dict_info d3 ON d3.ID=a.paymentType
+		left JOIN  j_dict_info d4 ON d4.ID=a.operateType
+		WHERE a.nannyId=#{0}
+		AND a.isDel=16
+		ORDER BY a.createDate
+	</select>
+
+	<select id="getReportCashPledge" resultType="com.summ.model.response.ReportCashPledgeRes">
+		SELECT js.shopName,j.shopId,
+	SUM(
+		CASE j.operateType
+		WHEN '199' THEN
+			j.money
+		ELSE
+			0
+		END
+	) AS 'payMoney',
+count(
+		CASE j.operateType
+		WHEN '200' THEN
+			j.id
+		ELSE
+			0
+		END
+	) AS 'punishmentTimes',
+SUM(
+		CASE j.operateType
+		WHEN '200' THEN
+			j.money
+		ELSE
+			0
+		END
+	) AS 'punishmentMoney',
+SUM(
+		CASE j.operateType
+		WHEN '201' THEN
+			j.money
+		ELSE
+			0
+		END
+	) AS 'refundMoney'
+FROM
+	j_nanny_cash_pledge_record j
+LEFT JOIN j_shop js ON js.shopId = j.shopId
+WHERE
+	j.`status` = 53
+	AND j.isDel=16
+	AND j.createDate BETWEEN #{startDate}
+	AND  #{endDate}
+GROUP BY j.shopId
+	</select>
+
+	<select id="getReportCashPledgeDetailList" parameterType="com.summ.model.request.NannyCashPledgeReq" resultType="com.summ.model.response.NannyCashPledgeRes">
+		SELECT j.*,d1.INFO AS statusInfo,d2.INFO AS reasonInfo,d3.INFO AS paymentTypeInfo,d4.INFO AS operateTypeInfo
+		FROM j_nanny_cash_pledge_record j
+		LEFT JOIN j_shop js ON js.shopId = j.shopId
+		LEFT JOIN j_nanny_info jni ON jni.nannyId = j.nannyId
+		left JOIN  j_dict_info d1 ON d1.ID=j.status
+		left JOIN  j_dict_info d2 ON d2.ID=j.reason
+		left JOIN  j_dict_info d3 ON d3.ID=j.paymentType
+		left JOIN  j_dict_info d4 ON d4.ID=j.operateType
+		<if test="0 == nannyCashPledgeReq.shopId">
+			LEFT JOIN j_admin_shop jas ON jas.shopId = j.shopId
+		</if>
+		WHERE j.status = 53
+		AND j.isDel=16
+		AND j.createDate BETWEEN #{nannyCashPledgeReq.startDate}
+		AND  #{nannyCashPledgeReq.endDate}
+		<if test="0 != nannyCashPledgeReq.paymentType">
+			AND j.paymentType = #{nannyCashPledgeReq.paymentType}
+		</if>
+		<if test="0 != nannyCashPledgeReq.operateType">
+			AND j.operateType = #{nannyCashPledgeReq.operateType}
+		</if>
+		<if test="0 != nannyCashPledgeReq.nannyId">
+			AND j.nannyId = #{nannyCashPledgeReq.nannyId}
+		</if>
+		<if test="'' != nannyCashPledgeReq.nannyName">
+			AND jni.nannyName LIKE concat(concat('%',#{nannyCashPledgeReq.nannyName}),'%')
+		</if>
+		<if test="'' != nannyCashPledgeReq.nannyPhone">
+			AND jni.nannyPhone LIKE concat(concat('%',#{nannyCashPledgeReq.nannyPhone}),'%')
+		</if>
+		<if test="0 != nannyCashPledgeReq.shopId">
+			AND j.shopId = #{nannyCashPledgeReq.shopId}
+		</if>
+		<if test="0 == nannyCashPledgeReq.shopId">
+			AND jas.adminId = #{nannyCashPledgeReq.adminId}
+		</if>
+		ORDER BY j.createDate
+		limit #{nannyCashPledgeReq.page},#{nannyCashPledgeReq.size}
+	</select>
+
+	<select id="getReportCashPledgeDetailCount" parameterType="com.summ.model.request.NannyCashPledgeReq" resultType="java.lang.Integer">
+		SELECT COUNT(j.id)
+		FROM j_nanny_cash_pledge_record j
+		LEFT JOIN j_shop js ON js.shopId = j.shopId
+		LEFT JOIN j_nanny_info jni ON jni.nannyId = j.nannyId
+		left JOIN  j_dict_info d1 ON d1.ID=j.status
+		left JOIN  j_dict_info d2 ON d2.ID=j.reason
+		left JOIN  j_dict_info d3 ON d3.ID=j.paymentType
+		left JOIN  j_dict_info d4 ON d4.ID=j.operateType
+		<if test="0 == nannyCashPledgeReq.shopId">
+			LEFT JOIN j_admin_shop jas ON jas.shopId = j.shopId
+		</if>
+		WHERE j.`status` = 53
+		AND j.isDel=16
+		AND j.createDate BETWEEN #{nannyCashPledgeReq.startDate}
+		AND  #{nannyCashPledgeReq.endDate}
+		<if test="0 != nannyCashPledgeReq.paymentType">
+			AND j.paymentType = #{nannyCashPledgeReq.paymentType}
+		</if>
+		<if test="0 != nannyCashPledgeReq.operateType">
+			AND j.operateType = #{nannyCashPledgeReq.operateType}
+		</if>
+		<if test="0 != nannyCashPledgeReq.nannyId">
+			AND j.nannyId = #{nannyCashPledgeReq.nannyId}
+		</if>
+		<if test="'' != nannyCashPledgeReq.nannyName">
+			AND jni.nannyName LIKE concat(concat('%',#{nannyCashPledgeReq.nannyName}),'%')
+		</if>
+		<if test="'' != nannyCashPledgeReq.nannyPhone">
+			AND jni.nannyPhone LIKE concat(concat('%',#{nannyCashPledgeReq.nannyPhone}),'%')
+		</if>
+		<if test="0 != nannyCashPledgeReq.shopId">
+			AND j.shopId = #{nannyCashPledgeReq.shopId}
+		</if>
+		<if test="0 == nannyCashPledgeReq.shopId">
+			AND jas.adminId = #{nannyCashPledgeReq.adminId}
+		</if>
+	</select>
+
+</mapper>

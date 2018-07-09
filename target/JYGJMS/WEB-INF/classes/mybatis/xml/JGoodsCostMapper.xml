@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JGoodsCostMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		id, goodsId, supplierId, cost, idDel
+	</sql>
+
+	<select id="getSupplierList" resultType="com.summ.model.response.OrderTempSupplierRes">
+			SELECT js.supplierId,jcd.companyName as name,js.phone,jgc.cost
+			FROM j_goods_cost jgc
+			LEFT JOIN j_order_temp jot ON jot.goodsId = jgc.goodsId
+			LEFT JOIN j_supplier js ON js.supplierId=jgc.supplierId
+			LEFT JOIN j_company_data jcd ON js.companyId = jcd.companyId
+			WHERE jot.orderId=#{orderId}
+        	AND jcd.companyName LIKE concat(concat('%',#{supplierName}),'%')
+        	AND jgc.isDel=16
+	</select>
+
+</mapper>

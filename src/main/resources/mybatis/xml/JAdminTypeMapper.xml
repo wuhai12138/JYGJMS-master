@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JAdminTypeMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		id, adminId, adminTypeId
+	</sql>
+
+    <select id="getAdminTypeById" resultType="com.summ.model.response.AdminTypeRes">
+		SELECT j.*,jdi.INFO AS adminTypeIdInfo
+		FROM j_admin_type j
+		LEFT JOIN j_dict_info jdi ON jdi.ID = j.adminTypeId
+		WHERE j.adminId = #{0}
+		AND jdi.isDel=16
+	</select>
+
+</mapper>

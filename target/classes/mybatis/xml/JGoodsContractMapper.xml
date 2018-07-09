@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JGoodsContractMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		goodsId, service, price, Settlement, isDel
+	</sql>
+
+	<select id="getGoodsListBySupplier" resultType="com.summ.model.response.GoodsCostRes">
+		SELECT jg.*,jgc.service
+		FROM j_goods_contract jgc
+		LEFT JOIN j_goods_cost jg ON jg.goodsId=jgc.goodsId
+		WHERE jg.supplierId = #{0}
+		AND jgc.isDel=16
+	</select>
+
+	<select id="getGoodsList" resultType="com.summ.model.response.GoodsContractRes" parameterType="com.summ.model.request.GoodsReq">
+		SELECT jgc.*,j.INFO AS orderTypeInfo,j1.INFO AS goodsTypeInfo
+		FROM j_goods_contract jgc
+		LEFT JOIN j_dict_info j ON j.ID=jgc.orderType
+		LEFT JOIN j_dict_info j1 ON j1.ID=jgc.goodsType
+		WHERE 1=1
+		<if test="0!=goodsReq.isDel">
+			AND jgc.isDel=#{goodsReq.isDel}
+		</if>
+		<if test="0!=goodsReq.orderType">
+			AND jgc.orderType=#{goodsReq.orderType}
+		</if>
+		<if test="0!=goodsReq.goodsType">
+			AND jgc.goodsType=#{goodsReq.goodsType}
+		</if>
+		AND jgc.service LIKE concat(concat('%',#{goodsReq.service}),'%')
+		LIMIT #{goodsReq.page},#{goodsReq.size}
+	</select>
+	<select id="getGoodsListCount" resultType="java.lang.Integer" parameterType="com.summ.model.request.GoodsReq">
+		SELECT count(jgc.goodsId)
+		FROM j_goods_contract jgc
+		WHERE 1=1
+		<if test="0!=goodsReq.isDel">
+			AND jgc.isDel=#{goodsReq.isDel}
+		</if>
+		<if test="0!=goodsReq.orderType">
+			AND jgc.orderType=#{goodsReq.orderType}
+		</if>
+		<if test="0!=goodsReq.goodsType">
+			AND jgc.goodsType=#{goodsReq.goodsType}
+		</if>
+		AND jgc.service LIKE concat(concat('%',#{goodsReq.service}),'%')
+	</select>
+
+	<select id="getGoodsCostList" resultType="com.summ.model.response.GoodsCostRes">
+		SELECT j.*,jcd.companyName AS supplierName,js.phone AS supplierPhone
+		FROM j_goods_cost j
+		LEFT JOIN j_supplier js ON js.supplierId = j.supplierId
+		LEFT JOIN j_company_data jcd ON jcd.companyId = js.companyId
+		WHERE j.goodsId=#{0}
+		AND j.isDel=16
+	</select>
+
+
+
+</mapper>

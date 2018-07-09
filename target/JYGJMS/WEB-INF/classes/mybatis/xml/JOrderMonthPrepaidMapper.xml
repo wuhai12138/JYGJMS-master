@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JOrderMonthPrepaidMapper">
+
+    <select id="getPrepaidList" parameterType="com.summ.model.request.OrderMonthPrepaidReq"
+            resultType="com.summ.model.response.OrderMonthPrepaidRes">
+        SELECT j.*,jni.nannyName,jni.nannyPhone,jdi.INFO AS payStatusInfo,jdi1.INFO AS prepaidTypeInfo
+        FROM j_order_month_prepaid j
+        LEFT JOIN j_nanny_info jni ON jni.nannyId=j.nannyId
+        LEFT JOIN j_dict_info jdi ON jdi.ID=j.payStatus
+        LEFT JOIN j_dict_info jdi1 ON jdi1.ID=j.prepaidType
+        LEFT JOIN j_customer jc ON jc.customerId=j.customerId
+        WHERE j.isDel=16
+        <if test="0!=orderMonthPrepaidReq.orderId">
+            AND j.orderId=#{orderMonthPrepaidReq.orderId}
+        </if>
+        <if test="0!=orderMonthPrepaidReq.customerId">
+            AND j.customerId=#{orderMonthPrepaidReq.customerId}
+        </if>
+        <if test="0!=orderMonthPrepaidReq.nannyId">
+            AND j.nannyId=#{orderMonthPrepaidReq.nannyId}
+        </if>
+        <if test="0!=orderMonthPrepaidReq.payStatus">
+            AND j.payStatus=#{orderMonthPrepaidReq.payStatus}
+        </if>
+        AND jc.customerName LIKE concat(concat('%',#{orderMonthPrepaidReq.customerName}),'%')
+        AND jc.customerPhone LIKE concat(concat('%',#{orderMonthPrepaidReq.customerPhone}),'%')
+        AND jni.nannyName LIKE concat(concat('%',#{orderMonthPrepaidReq.nannyName}),'%')
+        AND j.prepaidDate BETWEEN #{orderMonthPrepaidReq.startPrepaidDate} AND #{orderMonthPrepaidReq.endPrepaidDate}
+        limit #{orderMonthPrepaidReq.page},#{orderMonthPrepaidReq.size}
+    </select>
+
+    <select id="getPrepaidListCount" parameterType="com.summ.model.request.OrderMonthPrepaidReq"
+            resultType="java.lang.Integer">
+        SELECT count(j.prepaidId)
+        FROM j_order_month_prepaid j
+        LEFT JOIN j_nanny_info jni ON jni.nannyId=j.nannyId
+        LEFT JOIN j_dict_info jdi ON jdi.ID=j.payStatus
+        LEFT JOIN j_dict_info jdi1 ON jdi1.ID=j.prepaidType
+        LEFT JOIN j_customer jc ON jc.customerId=j.customerId
+        WHERE j.isDel=16
+        <if test="0!=orderMonthPrepaidReq.orderId">
+            AND j.orderId=#{orderMonthPrepaidReq.orderId}
+        </if>
+        <if test="0!=orderMonthPrepaidReq.customerId">
+            AND j.customerId=#{orderMonthPrepaidReq.customerId}
+        </if>
+        <if test="0!=orderMonthPrepaidReq.nannyId">
+            AND j.nannyId=#{orderMonthPrepaidReq.nannyId}
+        </if>
+        <if test="0!=orderMonthPrepaidReq.payStatus">
+            AND j.payStatus=#{orderMonthPrepaidReq.payStatus}
+        </if>
+        AND jc.customerName LIKE concat(concat('%',#{orderMonthPrepaidReq.customerName}),'%')
+        AND jc.customerPhone LIKE concat(concat('%',#{orderMonthPrepaidReq.customerPhone}),'%')
+        AND jni.nannyName LIKE concat(concat('%',#{orderMonthPrepaidReq.nannyName}),'%')
+        AND j.prepaidDate BETWEEN #{orderMonthPrepaidReq.startPrepaidDate} AND #{orderMonthPrepaidReq.endPrepaidDate}
+    </select>
+</mapper>

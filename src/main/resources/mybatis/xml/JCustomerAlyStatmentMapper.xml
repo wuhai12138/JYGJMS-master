@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JCustomerAlyStatmentMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		tradeId, tradeNo, outTradeNo, tradeType, goodsName, createTime, paymentTime, storeNo, storeId, creater, terminal, customerAmount, orderAmount, receiptAmount, redPacketsMoney, pointAmount, alyDiscount, merchantsDiscount, vouchersDiscount, vouchersName, merchantsResPacketConsume, cardConsume, refundNo, serviceFee, profits, alyRemark, checking, checkingDate, remark, isDel
+	</sql>
+
+	<select id="getAlyStatmentListByDate" parameterType="com.summ.model.request.CustomerStatmentReq"
+			resultType="com.summ.model.JCustomerAlyStatment">
+		SELECT j.*,jdi.INFO AS checkingInfo
+		FROM j_customer_aly_statment j
+		LEFT JOIN j_dict_info jdi ON jdi.ID=j.checking
+		where
+		j.paymentTime BETWEEN #{customerStatmentReq.startDate} AND #{customerStatmentReq.endDate}
+		AND j.isDel=16
+	</select>
+
+</mapper>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JAccessDictMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		id, adminTypeId, accessId
+	</sql>
+
+	<select id="getAccessUrlById" resultType="com.summ.model.JAccess">
+		SELECT j.*
+		FROM j_access j
+		LEFT JOIN j_access_dict jad ON jad.accessId = j.accessId
+		WHERE jad.adminTypeId = #{0}
+	</select>
+</mapper>

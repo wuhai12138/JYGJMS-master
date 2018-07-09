@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JCustomerHouseMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		houseId, customerId, provinceId, cityId, areaId, streetId, houseAddress, bedRoom, livingRoom, restRoom, houseArea, createTime, isDel
+	</sql>
+
+    <update id="deleteList" parameterType="java.util.List">
+        UPDATE j_customer_house
+        SET isDel = 17
+        WHERE houseId IN (
+        <foreach collection="list" item="item" index="index" close="" open="" separator=",">
+            #{item}
+        </foreach>
+        )
+    </update>
+
+    <select id="getList" resultType="com.summ.model.response.CustomerHouseRes">
+		SELECT a.*,d1.provinceName AS provinceIdInfo,d2.cityName AS cityIdInfo,d3.areaName AS areaIdInfo,d5.streetName AS streetIdInfo,d4.INFO AS
+        isDelInfo,js.shopName,jchp.propertyName
+		FROM j_customer_house a
+		LEFT JOIN j_shop js ON js.shopId=a.shopId
+		LEFT JOIN j_province d1 ON a.provinceId = d1.provinceId
+        LEFT JOIN j_city d2 ON a.cityId = d2.cityId
+        LEFT JOIN j_area d3 ON a.areaId = d3.areaId
+        LEFT JOIN j_street d5 ON a.streetId = d5.streetId
+        LEFT JOIN j_dict_info d4 ON a.isDel = d4.ID
+        LEFT JOIN j_customer_house_property jchp  ON jchp.propertyId = a.propertyId
+		WHERE
+		customerId = #{0}
+		AND
+		a.isDel = 16
+	</select>
+
+</mapper>

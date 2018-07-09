@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JNannyWorkTimeMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		workTimeId, nannyId, monday, tuesday, wednesday, thursday, friday, saturday, sunday, remark, isDel
+	</sql>
+
+    <select id="signNannyWorkTime" parameterType="java.util.Map" resultType="com.summ.model.JNannyInfo">
+        SELECT nannyId
+        FROM j_nanny_work_time
+        WHERE nannyId = #{map.nannyId}
+        <if test="'周一' == map.weekday">
+            <foreach collection="map.longList" index="index" item="item" open=" AND "
+                     separator=" &amp; monday != 0 AND " close=" &amp; monday != 0">
+                #{item}
+            </foreach>
+        </if>
+        <if test="'周二' == map.weekday">
+            <foreach collection="map.longList" index="index" item="item" open=" AND "
+                     separator=" &amp; tuesday != 0 AND " close=" &amp; tuesday != 0">
+                #{item}
+            </foreach>
+        </if>
+        <if test="'周三' == map.weekday">
+            <foreach collection="map.longList" index="index" item="item" open=" AND "
+                     separator=" &amp; wednesday != 0 AND " close=" &amp; wednesday != 0">
+                #{item}
+            </foreach>
+        </if>
+        <if test="'周四' == map.weekday">
+            <foreach collection="map.longList" index="index" item="item" open=" AND "
+                     separator=" &amp; thursday != 0 AND " close=" &amp; thursday != 0">
+                #{item}
+            </foreach>
+        </if>
+        <if test="'周五' == map.weekday">
+            <foreach collection="map.longList" index="index" item="item" open=" AND "
+                     separator=" &amp; friday != 0 AND " close=" &amp; friday != 0">
+                #{item}
+            </foreach>
+        </if>
+        <if test="'周六' == map.weekday">
+            <foreach collection="map.longList" index="index" item="item" open=" AND "
+                     separator=" &amp; saturday != 0 AND " close=" &amp; saturday != 0">
+                #{item}
+            </foreach>
+        </if>
+        <if test="'周天' == map.weekday">
+            <foreach collection="map.longList" index="index" item="item" open=" AND "
+                     separator=" &amp; sunday != 0 AND " close=" &amp; sunday != 0">
+                #{item}
+            </foreach>
+        </if>
+
+    </select>
+
+    <select id="getHotNannyScheduleTime" parameterType="com.summ.model.request.NannyWortTimeByOrderReq"
+            resultType="com.summ.model.response.TimeAndWeekRes">
+        SELECT
+        j.startTime AS startId,
+        j.endTime AS endId,
+        j.startTimeValue AS start,
+        j.endTimeValue AS 'end',
+        j.weekday AS week,
+        concat("{",jc.customerId,"-",jc.customerName,"}") AS 'describe'
+        FROM
+        j_order_schedule j
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId = j.scheduleId
+        LEFT JOIN j_goods_contract jgc ON j.serviceId = jgc.goodsId
+        LEFT JOIN j_customer jc ON  j.customerId = jc.customerId
+        LEFT JOIN j_customer_house jch ON jch.houseId=j.houseId
+        WHERE
+        j.scheduleDate BETWEEN #{startDate}
+        AND  #{endDate}
+        AND j.isDel=16
+        AND j.scheduleStatus != 155
+        AND jsn.supplierId=1
+        AND jsn.nannyId = #{nannyId}
+
+    </select>
+
+    <select id="getHotNannyWorkTime" resultType="com.summ.model.response.NannyHotWorkTimeRes"
+            parameterType="com.summ.model.request.NannyWortTimeByOrderReq">
+        SELECT
+        DISTINCT j.nannyId,
+        j.monday,
+        j.tuesday,
+        j.wednesday,
+        j.thursday,
+        j.friday,
+        j.saturday,
+        j.sunday,
+        jni.nannyName,
+        jni.nannyPhone
+        FROM
+        j_nanny_work_time j
+        LEFT JOIN j_nanny_info jni ON jni.nannyId = j.nannyId
+        LEFT JOIN j_nanny_shop jns ON jns.nannyId=jni.nannyId
+        LEFT JOIN j_admin_shop jas ON jas.shopId = jns.shopId
+        WHERE jas.adminId = #{nannyWortTimeByOrderReq.adminId}
+        AND j.isDel=16
+        <if test="2==nannyWortTimeByOrderReq.operationType">
+            AND jni.hot = 168
+            AND jni.nannyStatus=56
+        </if>
+        <if test="0!=nannyWortTimeByOrderReq.nannyId">
+            AND j.nannyId=#{nannyWortTimeByOrderReq.nannyId}
+        </if>
+        <if test="165==nannyWortTimeByOrderReq.orderType">
+            AND jni.agencyPayStatus=158
+            AND jni.agencyValidDate &gt; CURRENT_DATE
+        </if>
+    </select>
+
+</mapper>

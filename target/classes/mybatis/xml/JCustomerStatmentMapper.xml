@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JCustomerStatmentMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		 statmentCustomer, customerId, chargeDate, statmentCustomerType, chargeMoney, chargeWay, adminId, terminal, status, balance, serialNumber, remark, card, bank
+	</sql>
+
+    <select id="getCount" resultType="java.lang.Integer" parameterType="com.summ.model.request.CustomerStatmentReq">
+        SELECT
+        COUNT(*)
+        FROM j_customer_statment
+        WHERE 1=1
+        AND isDel=16
+        <if test="0 != customerStatmentReq.customerId">
+            AND customerId = #{customerStatmentReq.customerId}
+        </if>
+        <if test="0 != customerStatmentReq.statmentCustomerType">
+            AND statmentCustomerType = #{customerStatmentReq.statmentCustomerType}
+        </if>
+        <if test="0 != customerStatmentReq.status">
+            AND status = #{customerStatmentReq.status}
+        </if>
+    </select>
+
+    <select id="getStatmentList" parameterType="com.summ.model.request.CustomerStatmentReq"
+            resultType="com.summ.model.response.CustomerStatmentRes">
+        SELECT a.*,d2.INFO AS statmentCustomerTypeInfo,d3.INFO AS chargeWayInfo,d4.INFO AS
+        terminalInfo,d5.INFO AS statusInfo,d6.customerName AS customerName,d6.customerPhone,
+        d7.adminName AS adminName,jch.houseAddress,jc.couponName,jc.couponPrice,jgc.service AS goodsName
+        FROM j_customer_statment a
+        LEFT JOIN j_dict_info d2 ON d2.ID = a.statmentCustomerType
+        LEFT JOIN j_dict_info d3 ON d3.ID = a.chargeWay
+        LEFT JOIN j_dict_info d4 ON d4.ID = a.terminal
+        LEFT JOIN j_dict_info d5 ON d5.ID = a.status
+        LEFT JOIN j_customer d6 ON d6.customerId = a.customerId
+        LEFT JOIN j_admin d7 ON d7.adminId = a.adminId
+        LEFT JOIN j_customer_house jch ON jch.houseId=a.houseId
+        LEFT JOIN j_coupon_list jcl ON jcl.couponListId=a.couponListId
+        LEFT JOIN j_coupon jc ON jc.couponId=jcl.couponId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId=a.goodsId
+        WHERE 1=1
+        AND a.isDel=16
+        <if test="0 != customerStatmentReq.customerId">
+            AND a.customerId = #{customerStatmentReq.customerId}
+        </if>
+        <if test="0 != customerStatmentReq.statmentCustomerType">
+            AND a.statmentCustomerType = #{customerStatmentReq.statmentCustomerType}
+        </if>
+        <if test="0 != customerStatmentReq.status">
+            AND a.status = #{customerStatmentReq.status}
+        </if>
+        ORDER BY a.chargeDate
+        LIMIT #{customerStatmentReq.page},#{customerStatmentReq.size}
+    </select>
+
+    <select id="getStatmentListByDate" parameterType="com.summ.model.request.CustomerStatmentReq"
+            resultType="com.summ.model.response.CustomerStatmentRes">
+        SELECT a.*,d2.INFO AS statmentCustomerTypeInfo,d3.INFO AS chargeWayInfo,d4.INFO AS
+        terminalInfo,d5.INFO AS statusInfo,d6.customerName AS customerName,d6.customerPhone,
+        d7.adminName AS adminName,jch.houseAddress,jc.couponName,jc.couponPrice,jgc.service AS goodsName,d8.INFO AS checkingInfo
+        FROM j_customer_statment a
+        LEFT JOIN j_dict_info d2 ON d2.ID = a.statmentCustomerType
+        LEFT JOIN j_dict_info d3 ON d3.ID = a.chargeWay
+        LEFT JOIN j_dict_info d4 ON d4.ID = a.terminal
+        LEFT JOIN j_dict_info d5 ON d5.ID = a.status
+        LEFT JOIN j_dict_info d8 ON d8.ID = a.checking
+        LEFT JOIN j_customer d6 ON d6.customerId = a.customerId
+        LEFT JOIN j_admin d7 ON d7.adminId = a.adminId
+        LEFT JOIN j_customer_house jch ON jch.houseId=a.houseId
+        LEFT JOIN j_coupon_list jcl ON jcl.couponListId=a.couponListId
+        LEFT JOIN j_coupon jc ON jc.couponId=jcl.couponId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId=a.goodsId
+        WHERE
+        a.chargeWay=#{customerStatmentReq.chargeWay}
+        AND a.isDel=16
+        AND a.status=53
+        AND a.chargeDate BETWEEN #{customerStatmentReq.startDate} AND #{customerStatmentReq.endDate}
+        ORDER BY a.checking DESC
+    </select>
+
+    <select id="getStatmentDetail" resultType="com.summ.model.response.CustomerStatmentRes">
+        SELECT a.*,d2.INFO AS statmentCustomerTypeInfo,d3.INFO AS chargeWayInfo,d4.INFO AS
+        terminalInfo,d5.INFO AS statusInfo,d6.customerName AS customerName,d6.customerPhone,
+        d7.adminName AS adminName,jch.houseAddress,jc.couponName,jc.couponPrice,jgc.service AS goodsName,jsn.nannyId,jsn.supplierId
+        FROM j_customer_statment a
+        LEFT JOIN j_dict_info d2 ON d2.ID = a.statmentCustomerType
+        LEFT JOIN j_dict_info d3 ON d3.ID = a.chargeWay
+        LEFT JOIN j_dict_info d4 ON d4.ID = a.terminal
+        LEFT JOIN j_dict_info d5 ON d5.ID = a.status
+        LEFT JOIN j_customer d6 ON d6.customerId = a.customerId
+        LEFT JOIN j_admin d7 ON d7.adminId = a.adminId
+        LEFT JOIN j_customer_house jch ON jch.houseId=a.houseId
+        LEFT JOIN j_coupon_list jcl ON jcl.couponListId=a.couponListId
+        LEFT JOIN j_coupon jc ON jc.couponId=jcl.couponId
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId=a.goodsId
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId=a.scheduleId
+        WHERE a.statmentId=#{0}
+        AND a.isDel=16
+    </select>
+
+    <select id="getCustomerRechargeMoney" resultType="java.math.BigDecimal">
+        SELECT SUM(chargeMoney)
+        FROM j_customer_statment
+        WHERE customerId=#{customerId}
+        AND chargeDate BETWEEN #{startDate} AND #{endDate}
+        and statmentCustomerType=38
+        AND isDel=16
+    </select>
+
+    <select id="getReportCustomerRecharge" parameterType="java.util.Map"
+            resultType="com.summ.model.response.ReportCustomerRechargeRes">
+        SELECT
+        j.shopId,
+        js.shopName,
+        SUM(
+        CASE j.chargeWay
+        WHEN 44 THEN
+        j.chargeMoney
+        ELSE
+        0
+        END
+        ) AS 'aliPay',
+        SUM(
+        CASE j.chargeWay
+        WHEN 45 THEN
+        j.chargeMoney
+        ELSE
+        0
+        END
+        ) AS 'WeiXin',
+        SUM(
+        CASE j.chargeWay
+        WHEN 127 THEN
+        j.chargeMoney
+        ELSE
+        0
+        END
+        ) AS 'cash',
+        SUM(
+        CASE j.chargeWay
+        WHEN 209 THEN
+        j.chargeMoney
+        ELSE
+        0
+        END
+        ) AS 'card',
+        SUM(j.chargeMoney) AS 'totalCharge',
+        SUM(jc.customerBalance) AS totalBalance
+        FROM
+        j_customer_statment j
+        LEFT JOIN j_customer_house jch ON jch.customerId=j.customerId
+        LEFT JOIN j_shop js ON js.shopId = j.shopId
+        LEFT JOIN j_customer jc ON jc.customerId = j.customerId
+        WHERE
+        j.chargeWay IN (44,45,127,209,243)
+        AND j.isDel=16
+        AND j.chargeDate BETWEEN #{map.startDate} AND #{map.endDate}
+        AND jch.shopId IN
+        <foreach collection="map.list" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        ORDER BY j.chargeDate
+    </select>
+
+    <select id="getReportCustomerRechargeCount" parameterType="java.util.Map"
+            resultType="java.lang.Integer">
+        SELECT
+        count(DISTINCT j.shopId)
+        FROM
+        j_customer_statment j
+        LEFT JOIN j_shop js ON js.shopId = j.shopId
+        LEFT JOIN j_customer jc ON jc.customerId = j.customerId
+        LEFT JOIN j_customer_house jch ON jch.customerId=j.customerId
+        WHERE
+        j.statmentCustomerType = 38
+        AND j.isDel=16
+        AND j.chargeDate BETWEEN #{map.startDate} AND #{map.endDate}
+        AND jch.shopId IN
+        <foreach collection="map.list" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+
+    <select id="getCustomerRechargeDetail" parameterType="java.util.Map"
+            resultType="com.summ.model.response.CustomerStatmentRes">
+        SELECT a.*,d2.INFO AS statmentCustomerTypeInfo,d3.INFO AS chargeWayInfo,d4.INFO AS
+        terminalInfo,d5.INFO AS statusInfo,d6.customerName AS customerName,d6.customerPhone,d7.adminName AS adminName,js.shopName
+        FROM j_customer_statment a
+        LEFT JOIN j_dict_info d2 ON d2.ID = a.statmentCustomerType
+        LEFT JOIN j_dict_info d3 ON d3.ID = a.chargeWay
+        LEFT JOIN j_dict_info d4 ON d4.ID = a.terminal
+        LEFT JOIN j_dict_info d5 ON d5.ID = a.status
+        LEFT JOIN j_customer d6 ON d6.customerId = a.customerId
+        LEFT JOIN j_admin d7 ON d7.adminId = a.adminId
+        LEFT JOIN j_shop js ON js.shopId=a.shopId
+        WHERE a.statmentCustomerType = 38
+        AND a.isDel=16
+        AND d6.customerName LIKE concat(concat('%',#{map.customerName}),'%')
+        AND d6.customerPhone LIKE concat(concat('%',#{map.customerPhone}),'%')
+        AND a.serialNumber LIKE concat(concat('%',#{map.serialNumber}),'%')
+        AND a.chargeDate BETWEEN #{map.startDate} AND #{map.endDate}
+        <if test="0 != map.customerId">
+            AND a.customerId = #{map.customerId}
+        </if>
+            AND a.shopId = #{map.shopId}
+        AND a.chargeWay IN
+        <foreach collection="map.chargeWay" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        AND a.terminal IN
+        <foreach collection="map.terminal" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        ORDER BY a.chargeDate
+        LIMIT #{map.page},#{map.size}
+    </select>
+
+    <select id="getCustomerRechargeDetailCount" parameterType="java.util.Map"
+            resultType="java.lang.Integer">
+        SELECT COUNT(a.statmentId)
+        FROM j_customer_statment a
+        LEFT JOIN j_dict_info d2 ON d2.ID = a.statmentCustomerType
+        LEFT JOIN j_dict_info d3 ON d3.ID = a.chargeWay
+        LEFT JOIN j_dict_info d4 ON d4.ID = a.terminal
+        LEFT JOIN j_dict_info d5 ON d5.ID = a.status
+        LEFT JOIN j_customer d6 ON d6.customerId = a.customerId
+        LEFT JOIN j_admin d7 ON d7.adminId = a.adminId
+        LEFT JOIN j_shop js ON js.shopId=a.shopId
+        <if test="0 == map.shopId">
+            LEFT JOIN j_admin_shop jas2 ON jas2.shopId=a.shopId
+        </if>
+        WHERE a.statmentCustomerType = 38
+        AND a.isDel=16
+        AND d6.customerName LIKE concat(concat('%',#{map.customerName}),'%')
+        AND d6.customerPhone LIKE concat(concat('%',#{map.customerPhone}),'%')
+        AND a.serialNumber LIKE concat(concat('%',#{map.serialNumber}),'%')
+        AND a.chargeDate BETWEEN #{map.startDate} AND #{map.endDate}
+        <if test="0 != map.customerId">
+            AND a.customerId = #{map.customerId}
+        </if>
+            AND a.shopId = #{map.shopId}
+        AND a.chargeWay IN
+        <foreach collection="map.chargeWay" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        AND a.terminal IN
+        <foreach collection="map.terminal" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+</mapper>

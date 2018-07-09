@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JNannyLanguageMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		nannyLangId, languageId, nannyId, isDel
+	</sql>
+
+	<select id="getSelectedLanguage" resultType="com.summ.model.response.NannyLanguageRes">
+		SELECT j.nannyLangId,d1.INFO AS languageIdInfo
+		FROM j_nanny_language j
+		LEFT JOIN j_dict_info d1 ON j.languageId = d1.ID
+		WHERE j.nannyId = #{0}
+	</select>
+
+	<select id="getUnselectedLanguage" resultType="com.summ.model.JDictInfo">
+		SELECT ID,INFO
+		FROM
+		j_dict_info
+		WHERE
+		ID NOT IN (
+		SELECT j.languageId
+		FROM
+		j_nanny_language AS j
+		WHERE j.nannyId = ${nannyId})
+		AND
+		INFO LIKE "%${name}%"
+		AND TYPECODE = 17
+	</select>
+
+</mapper>

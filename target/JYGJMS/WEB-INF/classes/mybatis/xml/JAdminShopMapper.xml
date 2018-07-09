@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JAdminShopMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		id, adminId, shopId
+	</sql>
+
+	<select id="getList" resultType="com.summ.model.response.AdminShopRes">
+		SELECT j.shopId,j.shopName
+		FROM j_shop j
+		LEFT JOIN j_admin_shop jas ON jas.shopId = j.shopId
+		WHERE jas.adminId=#{0}
+		AND j.isDel=16
+	</select>
+
+</mapper>

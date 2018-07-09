@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JLeaguerShopMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		id, leaguerId, shopId
+	</sql>
+
+	<select id="getLeaguerShop" resultType="com.summ.model.response.LeaguerShopRes">
+		SELECT j.id,d1.shopName AS shopName,j.LeaguerId,j.shopId
+		FROM j_Leaguer_shop j
+		LEFT JOIN j_shop d1 ON d1.shopId= j.shopId
+		WHERE j.LeaguerId=#{0}
+	</select>
+
+</mapper>

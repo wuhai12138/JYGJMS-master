@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JShopMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		shopId, trainId, shopName, shopPhone, shopAddress, shopPayCode, shopUrl, longitude, latitude, isDel, createTime, modifyTime
+	</sql>
+
+	<select id="getAllShop" resultType="com.summ.model.JShop">
+		SELECT *
+		FROM j_shop
+		ORDER BY staring DESC
+	</select>
+
+	<select id="getShopList" parameterType="com.summ.model.request.ShopReq" resultType="com.summ.model.response.ShopRes">
+		SELECT js.*,d2.provinceName,d3.cityName,d4.areaName,d5.streetName
+		FROM j_shop js
+		<if test="0==shopReq.shopId">
+			LEFT JOIN j_admin_shop jas ON jas.shopId = js.shopId
+		</if>
+		LEFT JOIN j_province d2 ON d2.provinceId = js.provinceId
+		LEFT JOIN j_city d3 ON d3.cityId = js.cityId
+		LEFT JOIN j_area d4 ON d4.areaId = js.areaId
+		LEFT JOIN j_street d5 ON d5.streetId = js.streetId
+		WHERE js.isDel=16
+		AND js.shopName LIKE concat(concat('%',#{shopReq.shopName}),'%')
+		AND js.shopAddress LIKE concat(concat('%',#{shopReq.shopAddress}),'%')
+		AND js.shopPhone LIKE concat(concat('%',#{shopReq.shopPhone}),'%')
+		<if test="0==shopReq.shopId">
+			AND jas.adminId=#{shopReq.adminId}
+		</if>
+		<if test="0!=shopReq.shopId">
+			AND js.shopId=#{shopReq.shopId}
+		</if>
+	</select>
+
+</mapper>

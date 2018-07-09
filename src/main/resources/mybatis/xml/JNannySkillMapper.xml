@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JNannySkillMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		nannySkillId, nannyId, skillId, isDel
+	</sql>
+
+	<select id="getSelectedSkill" resultType="com.summ.model.response.NannySkillRes">
+		SELECT j.nannySkillId,d1.INFO AS skillIdInfo
+		FROM j_nanny_skill j
+		LEFT JOIN j_dict_info d1 ON j.skillId = d1.ID
+		WHERE j.nannyId = #{0}
+	</select>
+
+	<select id="getUnselectedSkill" resultType="com.summ.model.JDictInfo">
+		SELECT ID,INFO
+		FROM
+		j_dict_info
+		WHERE
+		ID NOT IN (
+		SELECT j.skillId
+		FROM
+		j_nanny_skill AS j
+		WHERE j.nannyId = ${nannyId})
+		AND
+		INFO LIKE "%${name}%"
+		AND TYPECODE = 19
+	</select>
+
+</mapper>

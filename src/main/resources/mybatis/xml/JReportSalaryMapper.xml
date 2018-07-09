@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JReportSalaryMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		reportId, salaryDate, shopId, shopName, nannyAmount, workTimeLevelThree, workTimeLevelfour, workTimeLevelfive, hourlySalary, rewards, orderRefund, realSalary, IndividualIncomeTax, financialCheck, financialCheckId, financialCheckDate, shopSalaryCheck, shopSalaryCheckId, shopSalaryCheckDate, shopPayoffCheck, shopPayoffCheckId, shopPayoffCheckDate, payoffStatus, remark, isDel
+	</sql>
+
+    <select id="getSalaryList" parameterType="com.summ.model.request.SalaryReq"
+            resultType="com.summ.model.response.ReportSalaryRes">
+        SELECT jrs.*,d1.INFO AS financialCheckInfo,d2.INFO AS shopSalaryCheckInfo,d3.INFO AS shopPayoffCheckInfo,d4.INFO
+        AS payoffStatusInfo
+        FROM j_report_salary jrs
+        LEFT JOIN j_dict_info d1 ON d1.ID = jrs.financialCheck
+        LEFT JOIN j_dict_info d2 ON d2.ID = jrs.shopSalaryCheck
+        LEFT JOIN j_dict_info d3 ON d3.ID = jrs.shopPayoffCheck
+        LEFT JOIN j_dict_info d4 ON d4.ID = jrs.payoffStatus
+        <if test="0==salaryReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = jrs.shopId
+        </if>
+        WHERE jrs.isDel=16
+        AND jrs.salaryDate = #{salaryReq.startDate}
+        <if test="0!=salaryReq.shopId">
+            AND jrs.shopId = #{salaryReq.shopId}
+        </if>
+        <if test="0==salaryReq.shopId">
+            AND jas.adminId = #{salaryReq.adminId}
+        </if>
+    </select>
+
+    <select id="countNannyLevelWorktime" parameterType="com.summ.model.request.SalaryReq"
+            resultType="com.summ.model.response.ReportSalaryRes">
+        SELECT
+        a.shopId,
+        a.shopName,
+        SUM(a.statmentMoney) AS 'hourlySalary',
+        SUM(
+        CASE a.nannyLevel
+        WHEN '84' THEN
+        a.serviceTimeLength
+        ELSE
+        0
+        END
+        ) AS 'workTimeLevelThree',
+        SUM(
+        CASE a.nannyLevel
+        WHEN '85' THEN
+        a.serviceTimeLength
+        ELSE
+        0
+        END
+        ) AS 'workTimeLevelFour',
+        SUM(
+        CASE a.nannyLevel
+        WHEN '86' THEN
+        a.serviceTimeLength
+        ELSE
+        0
+        END
+        ) AS 'workTimeLevelFive'
+        FROM
+        (
+        SELECT
+        SUM(jns.serviceTimeLength) AS serviceTimeLength,
+        SUM(jns.statmentMoney) AS statmentMoney,
+        jns.shopId,
+        js.shopName,
+        jns.nannyCurrentJobLevel AS nannyLevel
+        FROM
+        j_nanny_statment jns
+        LEFT JOIN j_shop js ON js.shopId = jns.shopId
+        <if test="0==salaryReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = jns.shopId
+        </if>
+        WHERE
+        jns.statmentNannyType NOT IN (159, 160, 161)
+        AND jns.isDel=16
+        AND jns.serviceDate BETWEEN #{salaryReq.startDate}
+        AND #{salaryReq.endDate}
+        <if test="0==salaryReq.shopId">
+            AND jas.adminId = #{salaryReq.adminId}
+        </if>
+        <if test="0!=salaryReq.shopId">
+            AND jns.shopId = #{salaryReq.shopId}
+        </if>
+        GROUP BY
+        jns.shopId,
+        jns.nannyCurrentJobLevel
+        ) AS a
+        GROUP BY
+        a.shopId
+    </select>
+
+    <select id="countNannySalary" parameterType="com.summ.model.request.SalaryReq"
+            resultType="com.summ.model.response.ReportSalaryRes">
+        SELECT
+	shopId,
+	SUM(
+		CASE statmentNannyType
+		WHEN '159' THEN
+			statmentMoney
+		ELSE
+			0
+		END
+	) AS `rewards`,
+	SUM(
+		CASE statmentNannyType
+		WHEN '161' THEN
+			statmentMoney
+		ELSE
+			0
+		END
+	) AS `orderRefund`
+FROM
+	j_nanny_statment
+	WHERE isDel=16
+GROUP BY shopId
+    </select>
+
+</mapper>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JCouponShopMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		couponShopId, couponId, shopId
+	</sql>
+
+	<select id="getCouponShop" resultType="com.summ.model.response.CouponShopRes">
+		SELECT j.*,js.shopName
+		FROM j_coupon_shop j
+		LEFT JOIN j_shop js ON js.shopId=j.shopId
+		WHERE j.couponId=#{0}
+	</select>
+
+
+</mapper>

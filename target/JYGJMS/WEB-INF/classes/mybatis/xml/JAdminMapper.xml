@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JAdminMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		adminId, adminName, adminPhone, adminType, adminBelong, shopId, trainId, isDel, createTime, adminPassword
+	</sql>
+
+    <select id="getAdminById" resultType="com.summ.model.JAdmin">
+		SELECT *
+		FROM j_admin
+		WHERE adminId = #{id}
+		AND isDel=16
+	</select>
+
+	<select id="getAdminList" parameterType="com.summ.model.request.PaginateReq" resultType="com.summ.model.response.AdminRes">
+		SELECT DISTINCT(a.adminId),a.adminName,a.adminPassword,a.adminPhone
+		FROM j_admin a
+		LEFT JOIN j_admin_shop jas ON jas.adminId = a.adminId
+		WHERE a.isDel = 16
+		<if test="0 != paginateReq.shopId">
+			AND jas.shopId = #{paginateReq.shopId}
+		</if>
+		<if test="'' != paginateReq.adminName">
+			AND a.adminName LIKE concat(concat('%',#{paginateReq.adminName}),'%')
+		</if>
+		<if test="0 != paginateReq.adminPhone">
+			AND a.adminPhone LIKE concat(concat('%',#{paginateReq.adminPhone}),'%')
+		</if>
+		AND a.isDel=16
+		LIMIT #{paginateReq.page},#{paginateReq.size}
+	</select>
+
+    <select id="getAccess" resultType="com.summ.model.response.AccessRes">
+		SELECT a.accessText,a.accessUrl
+		FROM j_access a
+		LEFT JOIN j_access_dict ad ON a.accessId = ad.accessId
+		LEFT JOIN j_admin_type jat ON jat.adminTypeId = ad.adminTypeId
+		WHERE jat.id = #{0}
+		ORDER BY a.sort
+	</select>
+
+    <delete id="deleteAdmin" parameterType="com.summ.model.JAdmin">
+		UPDATE j_admin
+		SET isDel = 17
+		WHERE adminId=#{0}
+	</delete>
+
+    <select id="getCount" resultType="java.lang.Integer" parameterType="com.summ.model.request.PaginateReq">
+		SELECT count(a.adminId)
+		FROM j_admin a
+		LEFT JOIN j_admin_shop jas ON jas.adminId = a.adminId
+		WHERE a.isDel = 16
+		<if test="0 != paginateReq.shopId">
+			AND jas.shopId = #{paginateReq.shopId}
+		</if>
+		<if test="'' != paginateReq.adminName">
+			AND a.adminName LIKE concat(concat('%',#{paginateReq.adminName}),'%')
+		</if>
+		<if test="0 != paginateReq.adminPhone">
+			AND a.adminPhone LIKE concat(concat('%',#{paginateReq.adminPhone}),'%')
+		</if>
+		LIMIT #{paginateReq.page},#{paginateReq.size}
+	</select>
+
+</mapper>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JNannyShopMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		nannyShopId, nannyId, shopId, isDel
+	</sql>
+
+
+	<select id="signNannyShopByShop" resultType="com.summ.model.JNannyShop">
+		SELECT j.*
+		FROM j_nanny_shop j
+		WHERE j.nannyId=#{nannyId}
+		AND j.shopId=#{shopId}
+	</select>
+
+</mapper>

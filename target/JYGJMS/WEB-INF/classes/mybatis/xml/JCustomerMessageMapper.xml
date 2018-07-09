@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JCustomerMessageMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		messageId, content, customerId, orderId, scheduleId, createDate, department, messageStatus, messageType, noteAdmin, isDel
+	</sql>
+
+	<select id="getCustomerFeedbackCount" parameterType="com.summ.model.request.CustomerFeedbackReq"
+			resultType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM j_customer_message j
+		LEFT JOIN j_customer_message_department jcmd ON jcmd.messageId = j.messageId
+		WHERE j.isDel=16
+		<if test="0 != customerFeedbackReq.department">
+			AND jcmd.department = #{customerFeedbackReq.department}
+		</if>
+		<if test="0 != customerFeedbackReq.messageStatus">
+			AND j.messageStatus = #{customerFeedbackReq.messageStatus}
+		</if>
+		AND j.createDate BETWEEN #{customerFeedbackReq.startDate}
+		AND  #{customerFeedbackReq.endDate}
+	</select>
+
+	<select id="getCustomerFeedbackList" parameterType="com.summ.model.request.CustomerFeedbackReq"
+			resultType="com.summ.model.response.CustomerFeedbackRes">
+		SELECT j.*,jc.customerName,jc.customerPhone,d2.INFO AS messageStatusInfo,GROUP_CONCAT(d3.INFO) AS department
+		FROM j_customer_message j
+		LEFT JOIN j_customer jc ON j.customerId = jc.customerId
+		LEFT JOIN j_dict_info d2 ON d2.ID = j.messageStatus
+		LEFT JOIN j_customer_message_department jcmd ON jcmd.messageId = j.messageId
+		LEFT JOIN j_dict_info d3 ON d3.ID = jcmd.department
+		WHERE j.isDel=16
+		<if test="0 != customerFeedbackReq.department">
+			AND jcmd.department = #{customerFeedbackReq.department}
+		</if>
+		<if test="0 != customerFeedbackReq.messageStatus">
+			AND j.messageStatus = #{customerFeedbackReq.messageStatus}
+		</if>
+		AND j.createDate BETWEEN #{customerFeedbackReq.startDate}
+		AND  #{customerFeedbackReq.endDate}
+		GROUP BY j.messageId
+		LIMIT #{customerFeedbackReq.page},#{customerFeedbackReq.size}
+	</select>
+
+	<select id="getCustomerFeedbackDetail" parameterType="java.lang.Integer"
+			resultType="com.summ.model.response.CustomerFeedbackRes">
+		SELECT j.*,jc.customerName,jc.customerPhone,d2.INFO AS statusInfo,GROUP_CONCAT(d1.INFO) AS department
+		FROM j_customer_message j
+		LEFT JOIN j_customer jc ON j.customerId = jc.customerId
+		LEFT JOIN j_dict_info d2 ON d2.ID = j.messageStatus
+		LEFT JOIN j_customer_message_department jcmd ON jcmd.messageId = j.messageId
+		LEFT JOIN j_dict_info d1 ON d1.ID = jcmd.department
+		WHERE j.isDel=16
+		AND j.messageId=#{0}
+	</select>
+
+</mapper>

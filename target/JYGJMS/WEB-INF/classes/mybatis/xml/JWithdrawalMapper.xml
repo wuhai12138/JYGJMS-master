@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JWithdrawalMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		withdrawalId, provinceId, cityId, areaId, streetId, withdrawalCard, withdrawalIdAddress, applyTpe, applyId, applyName, applyPhone, applyDate, checkId, checkDate, checkStatus, remark, iisDel
+	</sql>
+
+	<select id="getWithdrawal" parameterType="java.util.Map" resultType="com.summ.model.response.WithdrawalRes">
+		SELECT j.*,jdi1.INFO AS applyTypeInfo,jdi2.INFO AS checkStatusInfo,d2.provinceName AS province,d3.cityName AS city,d4.areaName AS area,d5.streetName AS street,ja.adminName AS checkName,ja2.adminName AS payName
+		FROM j_withdrawal j
+		LEFT JOIN j_dict_info jdi1 ON jdi1.ID = j.applyType
+		LEFT JOIN j_dict_info jdi2 ON jdi2.ID = j.checkStatus
+		LEFT JOIN j_province d2 ON d2.provinceId = j.provinceId
+		LEFT JOIN j_city d3 ON d3.cityId = j.cityId
+		LEFT JOIN j_area d4 ON d4.areaId = j.areaId
+		LEFT JOIN j_street d5 ON d5.streetId = j.streetId
+		LEFT JOIN j_admin ja ON ja.adminId=j.checkId
+		LEFT JOIN j_admin ja2 ON ja2.adminId=j.payId
+		WHERE 1=1
+		AND j.isDel=16
+		AND j.applyDate BETWEEN #{map.startDate} AND #{map.endDate}
+		AND j.applyType IN
+		<foreach collection="map.applyType" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item}
+		</foreach>
+		AND j.checkStatus IN
+		<foreach collection="map.checkStatus" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item}
+		</foreach>
+		limit #{map.page},#{map.size}
+	</select>
+
+	<select id="getWithdrawalCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+		SELECT count(j.withdrawalId)
+		FROM j_withdrawal j
+		LEFT JOIN j_dict_info jdi1 ON jdi1.ID = j.applyType
+		LEFT JOIN j_dict_info jdi2 ON jdi2.ID = j.checkStatus
+		WHERE 1=1
+		AND j.isDel=16
+		AND j.applyDate BETWEEN #{map.startDate} AND #{map.endDate}
+		AND j.applyType IN
+		<foreach collection="map.applyType" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item}
+		</foreach>
+		AND j.checkStatus IN
+		<foreach collection="map.checkStatus" index="index" item="item" open="("
+				 separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+
+</mapper>

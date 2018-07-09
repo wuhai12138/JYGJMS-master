@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JOrderTempMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		orderId, customerId, shopId, houseId, orderStatus, goodsId, supplierId, orderDate, teacherId, unitPrice, serviceAmount, totalPrice, discount, payMoney, payStatus, createTime, remark, isDel
+	</sql>
+
+	<select id="getTempCount" parameterType="com.summ.model.request.OrderTempReq" resultType="java.lang.Integer">
+		SELECT COUNT(jot.orderId)
+		FROM j_order_temp jot
+		LEFT JOIN j_shop js ON js.shopId = jot.shopId
+		LEFT JOIN j_customer jc ON jc.customerId = jot.customerId
+		LEFT JOIN j_customer_house jch ON jch.houseId = jot.houseId
+		LEFT JOIN j_dict_info jdi ON jdi.ID = jot.orderStatus
+		LEFT JOIN j_dict_info jdi1 ON jdi1.ID = jot.payStatus
+		LEFT JOIN j_goods_contract jgc ON jgc.goodsId = jot.goodsId
+		<if test="0 == orderTempReq.shopId">
+			LEFT JOIN j_admin_shop jas ON jas.shopId = jot.shopId
+		</if>
+		WHERE jot.isDel = 16
+		AND jot.createTime BETWEEN #{orderTempReq.startDate} AND #{orderTempReq.endDate}
+		AND jc.customerName LIKE concat(concat('%',#{orderTempReq.customerName}),'%')
+		AND jc.customerPhone LIKE concat(concat('%',#{orderTempReq.customerPhone}),'%')
+		AND jch.houseAddress LIKE concat(concat('%',#{orderTempReq.houseAddress}),'%')
+		<if test="0 != orderTempReq.orderStatus">
+			AND jot.orderStatus = #{orderTempReq.orderStatus}
+		</if>
+		<if test="0 != orderTempReq.payStatus">
+			AND jot.payStatus = #{orderTempReq.payStatus}
+		</if>
+		<if test="0 != orderTempReq.orderCloseStatus">
+			AND jot.orderCloseStatus = #{orderTempReq.orderCloseStatus}
+		</if>
+		<if test="0 != orderTempReq.createId">
+			AND jot.createId = #{orderTempReq.createId}
+		</if>
+		<if test="0 != orderTempReq.shopId">
+			AND jot.shopId = #{orderTempReq.shopId}
+		</if>
+		<if test="0 == orderTempReq.shopId">
+			AND jas.adminId = #{orderTempReq.adminId}
+		</if>
+		<if test="0 != orderTempReq.customerId">
+			AND jc.customerId = #{orderTempReq.customerId}
+		</if>
+	</select>
+
+	<select id="getTempList" parameterType="com.summ.model.request.OrderTempReq" resultType="com.summ.model.response.OrderTempRes">
+		SELECT jot.*,jc.customerName,jch.houseAddress,jdi3.INFO AS orderOriginInfo,jdi.INFO AS orderStatusInfo,jc.customerPhone,jgc.service,jgc.unitName,js.shopName,jc.remark AS customerRemark,jdi1.INFO AS payStatusInfo,jdi2.INFO AS orderCloseStatusInfo,jc.customerBalance,jcc.couponName
+		FROM j_order_temp jot
+		LEFT JOIN j_shop js ON js.shopId = jot.shopId
+		LEFT JOIN j_customer jc ON jc.customerId = jot.customerId
+		LEFT JOIN j_customer_house jch ON jch.houseId = jot.houseId
+		LEFT JOIN j_dict_info jdi ON jdi.ID = jot.orderStatus
+		LEFT JOIN j_dict_info jdi1 ON jdi1.ID = jot.payStatus
+		LEFT JOIN j_dict_info jdi2 ON jdi2.ID = jot.orderCloseStatus
+		LEFT JOIN j_dict_info jdi3 ON jdi3.ID = jot.orderOrigin
+		LEFT JOIN j_goods_contract jgc ON jgc.goodsId = jot.goodsId
+		LEFT JOIN j_coupon_list jcl ON jcl.couponListId=jot.couponListId
+		LEFT JOIN j_coupon jcc ON jcc.couponId=jcl.couponId
+		<if test="0 == orderTempReq.shopId">
+			LEFT JOIN j_admin_shop jas ON jas.shopId = jot.shopId
+		</if>
+		WHERE jot.isDel = 16
+		AND jot.createTime BETWEEN #{orderTempReq.startDate} AND #{orderTempReq.endDate}
+		AND jc.customerName LIKE concat(concat('%',#{orderTempReq.customerName}),'%')
+		AND jc.customerPhone LIKE concat(concat('%',#{orderTempReq.customerPhone}),'%')
+		AND jch.houseAddress LIKE concat(concat('%',#{orderTempReq.houseAddress}),'%')
+		<if test="0 != orderTempReq.orderStatus">
+			AND jot.orderStatus = #{orderTempReq.orderStatus}
+		</if>
+		<if test="0 != orderTempReq.orderCloseStatus">
+			AND jot.orderCloseStatus = #{orderTempReq.orderCloseStatus}
+		</if>
+		<if test="0 != orderTempReq.createId">
+			AND jot.createId = #{orderTempReq.createId}
+		</if>
+		<if test="0 != orderTempReq.payStatus">
+			AND jot.payStatus = #{orderTempReq.payStatus}
+		</if>
+		<if test="0 != orderTempReq.shopId">
+			AND jot.shopId = #{orderTempReq.shopId}
+		</if>
+		<if test="0 == orderTempReq.shopId">
+			AND jas.adminId = #{orderTempReq.adminId}
+		</if>
+		<if test="0 != orderTempReq.customerId">
+			AND jc.customerId = #{orderTempReq.customerId}
+		</if>
+		order BY jot.orderId DESC
+		LIMIT #{orderTempReq.page},#{orderTempReq.size}
+	</select>
+
+</mapper>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JCouponMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		couponId, couponName, couponDetail, couponPrice, isDel, createTime, validTime, couponOrigin
+	</sql>
+
+	<select id="getCouponList" resultType="com.summ.model.response.CouponRes">
+		SELECT j.*,jdi.INFO AS couponOriginInfo
+		FROM j_coupon j
+		LEFT JOIN j_dict_info jdi ON jdi.ID = j.couponOrigin
+		WHERE j.isDel=16
+		<if test="0 != couponReq.couponOrigin">
+			and j.couponOrigin = #{couponReq.couponOrigin}
+		</if>
+		AND j.couponName LIKE concat("%",concat(#{couponReq.couponName},"%"))
+		limit #{couponReq.page},#{couponReq.size}
+	</select>
+
+	<select id="getUsefulCouponList" resultType="com.summ.model.response.CouponRes" parameterType="com.summ.model.request.CouponReq">
+		SELECT j.*,jdi.INFO AS couponOriginInfo
+		FROM j_coupon j
+		LEFT JOIN j_dict_info jdi ON jdi.ID = j.couponOrigin
+		WHERE j.isDel=16
+		<if test="0 != couponReq.couponOrigin">
+			and j.couponOrigin = #{couponReq.couponOrigin}
+		</if>
+		AND j.isDel=16
+		AND j.validTime &gt;= CURRENT_DATE
+		limit #{couponReq.page},#{couponReq.size}
+	</select>
+
+	<select id="getCouponByCouponListId" resultType="com.summ.model.JCoupon">
+		SELECT j.*
+		FROM j_coupon j
+		LEFT JOIN j_coupon_list jcl ON jcl.couponId = j.couponId
+		WHERE jcl.couponListId = #{0}
+		AND j.isDel=16
+	</select>
+
+</mapper>

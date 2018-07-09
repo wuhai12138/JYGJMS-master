@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JCustomerMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		customerId, shopId, customerName, customerPhone, customerType, customerSex, customerBalance, warnType, remark, createTime, isDel, memberOrigin, memberLevel, memberType
+	</sql>
+
+    <select id="getCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+        SELECT
+        COUNT(DISTINCT a.customerId)
+        FROM j_customer a
+        LEFT JOIN j_customer_house jch ON a.customerId=jch.customerId
+        <if test="0 == customerPagReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = jch.shopId
+        </if>
+        WHERE a.isDel = 16
+        <if test="0 == customerPagReq.shopId">
+            AND jas.adminId = #{customerPagReq.adminId}
+        </if>
+        <if test="0 != customerPagReq.customerId">
+            AND a.customerId = #{customerPagReq.customerId}
+        </if>
+        <if test="0 != customerPagReq.customerType">
+            AND a.customerType = #{customerPagReq.customerType}
+        </if>
+        <if test="0 != customerPagReq.shopId">
+            AND jch.shopId = #{customerPagReq.shopId}
+        </if>
+        <if test="'' != customerPagReq.customerPhone">
+            AND a.customerPhone LIKE concat(concat('%',#{customerPagReq.customerPhone}),'%')
+
+        </if>
+        <if test="'' != customerPagReq.customerName">
+            AND a.customerName LIKE concat(concat('%',#{customerPagReq.customerName}),'%')
+        </if>
+    </select>
+    <select id="getCountNoShop" parameterType="java.lang.String" resultType="java.lang.Integer">
+        SELECT
+        COUNT(DISTINCT a.customerId)
+        FROM j_customer a
+        LEFT JOIN j_dict_info d1 ON a.customerType = d1.ID
+        LEFT JOIN j_dict_info d3 ON a.customerSex = d3.ID
+        LEFT JOIN j_dict_info d4 ON a.warnType = d4.ID
+        LEFT JOIN j_dict_info d5 ON a.isDel = d5.ID
+        WHERE a.isDel = 16
+        AND a.customerId NOT IN (
+        SELECT
+        j.customerId
+        FROM
+        j_customer j
+        INNER JOIN j_customer_house jch ON jch.customerId = j.customerId
+        AND j.isDel = 16
+        )
+        <if test="0 != customerPagReq.customerId">
+            AND a.customerId = #{customerPagReq.customerId}
+        </if>
+        <if test="0 != customerPagReq.customerType">
+            AND a.customerType = #{customerPagReq.customerType}
+        </if>
+        <if test="'' != customerPagReq.customerPhone">
+            AND a.customerPhone LIKE concat(concat('%',#{customerPagReq.customerPhone}),'%')
+        </if>
+        <if test="'' != customerPagReq.customerName">
+            AND a.customerName LIKE concat(concat('%',#{customerPagReq.customerName}),'%')
+        </if>
+        ORDER BY a.createTime
+    </select>
+
+    <select id="getCustomerList" parameterType="com.summ.model.request.CustomerPagReq"
+            resultType="com.summ.model.response.CustomerRes">
+        SELECT a.*,d1.INFO AS customerTypeInfo,d3.INFO AS customerSexInfo,d4.INFO AS
+        warnTypeInfo,d5.INFO AS isDelInfo
+        FROM j_customer a
+        LEFT JOIN j_customer_house jch ON a.customerId=jch.customerId
+        <if test="0 == customerPagReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = jch.shopId
+        </if>
+        LEFT JOIN j_dict_info d1 ON a.customerType = d1.ID
+        LEFT JOIN j_dict_info d3 ON a.customerSex = d3.ID
+        LEFT JOIN j_dict_info d4 ON a.warnType = d4.ID
+        LEFT JOIN j_dict_info d5 ON a.isDel = d5.ID
+        WHERE a.isDel = 16
+        <if test="0 == customerPagReq.shopId">
+            AND jas.adminId = #{customerPagReq.adminId}
+        </if>
+        <if test="0 != customerPagReq.customerId">
+            AND a.customerId = #{customerPagReq.customerId}
+        </if>
+        <if test="0 != customerPagReq.customerType">
+            AND a.customerType = #{customerPagReq.customerType}
+        </if>
+        <if test="0 != customerPagReq.shopId">
+            AND jch.shopId = #{customerPagReq.shopId}
+        </if>
+        <if test="'' != customerPagReq.customerPhone">
+            AND a.customerPhone LIKE concat(concat('%',#{customerPagReq.customerPhone}),'%')
+        </if>
+        <if test="'' != customerPagReq.customerName">
+            AND a.customerName LIKE concat(concat('%',#{customerPagReq.customerName}),'%')
+        </if>
+        GROUP BY a.customerId
+        ORDER BY a.createTime
+        LIMIT #{customerPagReq.page},#{customerPagReq.size}
+    </select>
+
+    <select id="getCustomerListNoShop" parameterType="com.summ.model.request.CustomerPagReq"
+            resultType="com.summ.model.response.CustomerRes">
+        SELECT a.*,d1.INFO AS customerTypeInfo,d3.INFO AS customerSexInfo,d4.INFO AS
+        warnTypeInfo,d5.INFO AS isDelInfo
+        FROM j_customer a
+        LEFT JOIN j_dict_info d1 ON a.customerType = d1.ID
+        LEFT JOIN j_dict_info d3 ON a.customerSex = d3.ID
+        LEFT JOIN j_dict_info d4 ON a.warnType = d4.ID
+        LEFT JOIN j_dict_info d5 ON a.isDel = d5.ID
+        WHERE a.isDel = 16
+        AND a.customerId NOT IN (
+        SELECT
+        j.customerId
+        FROM
+        j_customer j
+        INNER JOIN j_customer_house jch ON jch.customerId = j.customerId
+        AND j.isDel = 16
+        )
+        <if test="0 != customerPagReq.customerId">
+            AND a.customerId = #{customerPagReq.customerId}
+        </if>
+        <if test="0 != customerPagReq.customerType">
+            AND a.customerType = #{customerPagReq.customerType}
+        </if>
+        <if test="'' != customerPagReq.customerPhone">
+            AND a.customerPhone LIKE concat(concat('%',#{customerPagReq.customerPhone}),'%')
+        </if>
+        <if test="'' != customerPagReq.customerName">
+            AND a.customerName LIKE concat(concat('%',#{customerPagReq.customerName}),'%')
+        </if>
+        ORDER BY a.createTime
+        LIMIT #{customerPagReq.page},#{customerPagReq.size}
+    </select>
+
+    <update id="deleteList" parameterType="java.util.List">
+        UPDATE j_customer
+        SET isDel = 17
+        WHERE customerId IN (
+        <foreach collection="list" item="item" index="index" close="" open="" separator=",">
+            #{item}
+        </foreach>
+        )
+    </update>
+
+</mapper>

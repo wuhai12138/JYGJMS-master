@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JCouponListMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		couponListId, couponCode, couponId, shopId, customerId, couponStatus, orderId, createTime, isDel
+	</sql>
+
+    <update id="deleteCoupon" parameterType="java.lang.Integer">
+		UPDATE j_coupon_list
+		SET isDel = 17
+		WHERE couponListId = #{0}
+	</update>
+
+    <select id="getListById" parameterType="com.summ.model.request.CustomerCouponReq"
+            resultType="com.summ.model.response.CustomerCouponListRes">
+        SELECT j.*,d1.INFO AS couponStatusInfo,d2.shopName AS shopIdInfo,d3.INFO AS
+        isDelInfo,jc.couponName,jc.couponDetail,jc.couponCost,jc.couponPrice,jc.validTime,jc.couponOrigin,d4.INFO AS
+        couponOriginInfo
+        FROM j_coupon_list j
+        LEFT JOIN j_coupon jc ON jc.couponId = j.couponId
+        LEFT JOIN j_dict_info d1 ON d1.ID = j.couponStatus
+        LEFT JOIN j_shop d2 ON d2.shopId = j.shopId
+        LEFT JOIN j_dict_info d3 ON d3.ID = j.isDel
+        LEFT JOIN j_dict_info d4 ON d4.ID = jc.couponOrigin
+        WHERE j.isDel = 16
+        AND customerId = #{customerCouponReq.customerId}
+        <if test="'' != customerCouponReq.couponStatus">
+            AND j.couponStatus = #{customerCouponReq.couponStatus}
+        </if>
+        limit #{customerCouponReq.page},#{customerCouponReq.size}
+    </select>
+
+    <select id="getCount" parameterType="com.summ.model.request.CustomerCouponReq" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*)
+        FROM j_coupon_list
+        WHERE isDel = 16
+        AND customerId = #{customerCouponReq.customerId}
+        <if test="'' != customerCouponReq.couponStatus">
+            AND couponStatus = #{customerCouponReq.couponStatus}
+        </if>
+    </select>
+
+    <select id="getUnUseCouponList" parameterType="com.summ.model.request.OrderTempChargeReq"
+            resultType="com.summ.model.response.CustomerCouponListRes">
+        SELECT
+        cl.*, d1.INFO AS couponStatusInfo,
+        d2.shopName AS shopIdInfo,
+        d3.INFO AS isDelInfo,
+        c.couponName,
+        c.couponDetail,
+        c.couponCost,
+        c.couponPrice,
+        c.validTime,
+        c.couponOrigin,
+        d4.INFO AS couponOriginInfo
+        FROM
+        j_coupon c
+        LEFT JOIN j_coupon_list cl ON c.couponId = cl.couponId
+        LEFT JOIN j_dict_info d1 ON d1.ID = cl.couponStatus
+        LEFT JOIN j_shop d2 ON d2.shopId = cl.shopId
+        LEFT JOIN j_dict_info d3 ON d3.ID = cl.isDel
+        LEFT JOIN j_dict_info d4 ON d4.ID = c.couponOrigin
+        WHERE
+        cl.customerId=#{orderTempChargeReq.customerId}
+        AND cl.isDel=16
+        AND
+        cl.couponListId NOT IN (
+        SELECT
+        DISTINCT cl.couponListId
+        FROM
+        j_coupon c
+        LEFT JOIN j_coupon_list cl ON c.couponId = cl.couponId
+        LEFT JOIN j_coupon_goods cg ON c.couponId = cg.couponId
+        LEFT JOIN j_coupon_shop cs ON c.couponId = cs.couponId
+        WHERE
+        cl.customerId = #{orderTempChargeReq.customerId}
+        AND cg.goodsId IN
+        <foreach collection="orderTempChargeReq.goodsIdList" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        AND cs.shopId IN
+        <foreach collection="orderTempChargeReq.shopIdList" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        AND c.validTime >= NOW()
+        )
+
+	</select>
+
+    <select id="getUsedCouponList" parameterType="com.summ.model.request.OrderTempChargeReq"
+            resultType="com.summ.model.response.CustomerCouponListRes">
+        SELECT
+        DISTINCT cl.*, d1.INFO AS couponStatusInfo,
+        d2.shopName AS shopIdInfo,
+        d3.INFO AS isDelInfo,
+        c.couponName,
+        c.couponDetail,
+        c.couponCost,
+        c.couponPrice,
+        c.validTime,
+        c.couponOrigin,
+        d4.INFO AS couponOriginInfo
+        FROM
+        j_coupon c
+        LEFT JOIN j_coupon_list cl ON c.couponId = cl.couponId
+        LEFT JOIN j_coupon_goods cg ON c.couponId = cg.couponId
+        LEFT JOIN j_coupon_shop cs ON c.couponId = cs.couponId
+        LEFT JOIN j_dict_info d1 ON d1.ID = cl.couponStatus
+        LEFT JOIN j_shop d2 ON d2.shopId = cl.shopId
+        LEFT JOIN j_dict_info d3 ON d3.ID = cl.isDel
+        LEFT JOIN j_dict_info d4 ON d4.ID = c.couponOrigin
+        WHERE
+        cl.customerId = #{orderTempChargeReq.customerId}
+        AND cl.isDel=16
+        AND cg.goodsId IN
+        <foreach collection="orderTempChargeReq.goodsIdList" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        AND cs.shopId IN
+        <foreach collection="orderTempChargeReq.shopIdList" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        AND c.validTime >= NOW()
+    </select>
+</mapper>

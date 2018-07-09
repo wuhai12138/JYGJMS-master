@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JNannyScheduleFeedbackMapper">
+
+    <select id="getListBuReq" parameterType="com.summ.model.request.CustomerScheduleFeedBackReq"
+            resultType="com.summ.model.response.CustomerScheduleFeedbackRes">
+        SELECT j.*,jc.customerName,jc.customerPhone,jni.nannyName,jni.nannyPhone
+        FROM j_nanny_schedule_feedback j
+        LEFT JOIN j_customer jc on jc.customerId=j.customerId
+        LEFT JOIN j_nanny_info jni on jni.nannyId=j.nannyId
+        WHERE j.isDel=16
+        <if test="0!=customerScheduleFeedBackReq.scheduleId">
+            AND j.scheduleId=#{customerScheduleFeedBackReq.scheduleId}
+        </if>
+        <if test="0!=customerScheduleFeedBackReq.nannyId">
+            AND j.nannyId=#{customerScheduleFeedBackReq.nannyId}
+        </if>
+        <if test="0!=customerScheduleFeedBackReq.customerId">
+            AND j.customerId=#{customerScheduleFeedBackReq.customerId}
+        </if>
+        AND j.createDate BETWEEN #{customerScheduleFeedBackReq.startDate} AND #{customerScheduleFeedBackReq.endDate}
+        AND jc.customerName LIKE concat(concat('%',#{customerScheduleFeedBackReq.customerName}),'%')
+        AND jc.customerPhone LIKE concat(concat('%',#{customerScheduleFeedBackReq.customerPhone}),'%')
+        AND jni.nannyName LIKE concat(concat('%',#{customerScheduleFeedBackReq.nannyName}),'%')
+        AND jni.nannyPhone LIKE concat(concat('%',#{customerScheduleFeedBackReq.nannyPhone}),'%')
+        limit #{customerScheduleFeedBackReq.page},#{customerScheduleFeedBackReq.size}
+    </select>
+    <select id="getListBuReqCount" parameterType="com.summ.model.request.CustomerScheduleFeedBackReq"
+            resultType="java.lang.Integer">
+        SELECT count(j.scheduleFeedbackId)
+        FROM j_nanny_schedule_feedback j
+        LEFT JOIN j_customer jc on jc.customerId=j.customerId
+        LEFT JOIN j_nanny_info jni on jni.nannyId=j.nannyId
+        WHERE j.isDel=16
+        <if test="0!=customerScheduleFeedBackReq.scheduleId">
+            AND j.scheduleId=#{customerScheduleFeedBackReq.scheduleId}
+        </if>
+        <if test="0!=customerScheduleFeedBackReq.nannyId">
+            AND j.nannyId=#{customerScheduleFeedBackReq.nannyId}
+        </if>
+        <if test="0!=customerScheduleFeedBackReq.customerId">
+            AND j.customerId=#{customerScheduleFeedBackReq.customerId}
+        </if>
+        AND j.createDate BETWEEN #{customerScheduleFeedBackReq.startDate} AND #{customerScheduleFeedBackReq.endDate}
+        AND jc.customerName LIKE concat(concat('%',#{customerScheduleFeedBackReq.customerName}),'%')
+        AND jc.customerPhone LIKE concat(concat('%',#{customerScheduleFeedBackReq.customerPhone}),'%')
+        AND jni.nannyName LIKE concat(concat('%',#{customerScheduleFeedBackReq.nannyName}),'%')
+        AND jni.nannyPhone LIKE concat(concat('%',#{customerScheduleFeedBackReq.nannyPhone}),'%')
+    </select>
+</mapper>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JNannyJobLevelGoodsMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		id, jobLevelId, goodsId, isDel
+	</sql>
+
+    <select id="signNannyAndGoods" resultType="com.summ.model.JNannyInfo">
+		SELECT j.*
+FROM j_nanny_info j
+LEFT JOIN j_nanny_job_level jj ON jj.nannyId=j.nannyId
+LEFT JOIN j_nanny_job_level_goods jg ON jg.jobLevelId=jj.jobLevelId
+WHERE jg.goodsId=#{goodsId}
+AND j.nannyId=#{nannyId}
+AND j.isDel=16
+	</select>
+
+</mapper>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JSupplierStatmentMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		statmentId, statmentSupplier, supplierId, scheduleId, orderId, shopId, houseId, customerId, statmentSupplierType, statmentMoney, orderType, goodsId, serviceTime, serviceTimeLength, serviceDate, createDate, remark
+	</sql>
+
+	<select id="getSupplierStatmentDetail" parameterType="com.summ.model.request.SupplierStatmentDetailReq"
+			resultType="com.summ.model.response.SupplierStatmentDetailRes">
+		SELECT
+		j.*, jgc.service,
+		jdi.INFO AS statmentSupplierTypeInfo,
+		jc.customerName,jc.customerPhone,
+		js.shopName,
+		jch.houseAddress,jcd.companyName as supplierName,jni.phone AS supplierPhone
+		FROM
+		j_supplier_statment j
+		<if test="0 == supplierStatmentDetailReq.shopId">
+			LEFT JOIN j_admin_shop jas ON jas.shopId = j.shopId
+		</if>
+		LEFT JOIN j_goods_contract jgc ON jgc.goodsId = j.goodsId
+		LEFT JOIN j_customer jc ON jc.customerId = j.customerId
+		LEFT JOIN j_customer_house jch ON jch.houseId = j.houseId
+		LEFT JOIN j_dict_info jdi ON jdi.ID = j.statmentSupplierType
+		LEFT JOIN j_shop js ON js.shopId = j.shopId
+		LEFT JOIN j_supplier jni ON jni.supplierId=j.supplierId
+		LEFT JOIN j_company_data jcd ON jcd.companyId=jni.companyId
+		WHERE 1=1
+		AND j.isDel=16
+		<if test="0 != supplierStatmentDetailReq.supplierId">
+			AND j.supplierId = #{supplierStatmentDetailReq.supplierId}
+		</if>
+		AND j.serviceDate BETWEEN #{supplierStatmentDetailReq.startDate}
+		AND #{supplierStatmentDetailReq.endDate}
+		<if test="0 != supplierStatmentDetailReq.shopId">
+			AND j.shopId = #{supplierStatmentDetailReq.shopId}
+		</if>
+		<if test="0 != supplierStatmentDetailReq.statmentSupplierType">
+			AND j.statmentSupplierType = #{supplierStatmentDetailReq.statmentSupplierType}
+		</if>
+		<if test="0 == supplierStatmentDetailReq.shopId">
+			AND jas.adminId = #{supplierStatmentDetailReq.adminId}
+		</if>
+		<if test="0 != supplierStatmentDetailReq.reason">
+			AND j.reason = #{supplierStatmentDetailReq.reason}
+		</if>
+		ORDER BY j.serviceDate,j.serviceTime
+		limit #{supplierStatmentDetailReq.page},#{supplierStatmentDetailReq.size}
+	</select>
+
+	<select id="getSupplierStatmentDetailCount" parameterType="com.summ.model.request.SupplierStatmentDetailReq"
+			resultType="java.lang.Integer">
+		SELECT
+		count(j.statmentId)
+		FROM
+		j_supplier_statment j
+		<if test="0 == supplierStatmentDetailReq.shopId">
+			LEFT JOIN j_admin_shop jas ON jas.shopId = j.shopId
+		</if>
+		LEFT JOIN j_goods_contract jgc ON jgc.goodsId = j.goodsId
+		LEFT JOIN j_customer jc ON jc.customerId = j.customerId
+		LEFT JOIN j_customer_house jch ON jch.houseId = j.houseId
+		LEFT JOIN j_dict_info jdi ON jdi.ID = j.statmentSupplierType
+		LEFT JOIN j_shop js ON js.shopId = j.shopId
+		WHERE 1=1
+		AND j.isDel=16
+		<if test="0 != supplierStatmentDetailReq.supplierId">
+			AND j.supplierId = #{supplierStatmentDetailReq.supplierId}
+		</if>
+		AND j.serviceDate BETWEEN #{supplierStatmentDetailReq.startDate}
+		AND  #{supplierStatmentDetailReq.endDate}
+		<if test="0 != supplierStatmentDetailReq.shopId">
+			AND j.shopId = #{supplierStatmentDetailReq.shopId}
+		</if>
+		<if test="0 != supplierStatmentDetailReq.statmentSupplierType">
+			AND j.statmentsupplierType = #{supplierStatmentDetailReq.statmentSupplierType}
+		</if>
+		<if test="0 != supplierStatmentDetailReq.reason">
+			AND j.reason = #{supplierStatmentDetailReq.reason}
+		</if>
+		<if test="0 == supplierStatmentDetailReq.shopId">
+			AND jas.adminId = #{supplierStatmentDetailReq.adminId}
+		</if>
+	</select>
+</mapper>

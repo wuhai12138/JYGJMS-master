@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JNannyInfoMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		nannyId, nannyAvatar, nannyName, nannySex, nannyStatus, nannyType, nannyLevel, nannyPhone, provinceId, cityId, areaId, streetId, nannyAddress, nannyIdCard, nannyBirthday, nannyAge, nannyAnimalSign, nannyNation,nannyOrigin, nannyHeight, nannyWeight, salaryBank, salaryCard, expectSalary, nannyBuyoutStatus, nannyBuyoutDate, nannyAgencyFees, payment, validDate, remark, createTime, modifyTime, isDel
+	</sql>
+
+    <select id="getCount" parameterType="com.summ.model.request.NannyInfoReq" resultType="java.lang.Integer">
+        SELECT count(DISTINCT j.nannyId)
+        FROM j_nanny_info j
+        LEFT JOIN j_nanny_shop jns ON j.nannyId = jns.nannyId
+        <if test="0 == nannyInfoReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = jns.shopId
+        </if>
+        WHERE j.isDel = 16
+        <if test="0 != nannyInfoReq.nannyId">
+            AND j.nannyId = #{nannyInfoReq.nannyId}
+        </if>
+        <if test="'' != nannyInfoReq.nannyName">
+            AND j.nannyName LIKE concat(concat('%',#{nannyInfoReq.nannyName}),'%')
+        </if>
+        <if test="'' != nannyInfoReq.nannyPhone">
+            AND j.nannyPhone = #{nannyInfoReq.nannyPhone}
+        </if>
+        <if test="0 != nannyInfoReq.nannyStatus">
+            AND j.nannyStatus = #{nannyInfoReq.nannyStatus}
+        </if>
+        <if test="0 != nannyInfoReq.shopId">
+            AND jns.shopId = #{nannyInfoReq.shopId}
+        </if>
+        <if test="0 == nannyInfoReq.shopId">
+            AND jas.adminId = #{nannyInfoReq.adminId}
+        </if>
+        <if test="0 != nannyInfoReq.nannyLevel">
+            AND j.nannyLevel = #{nannyInfoReq.nannyLevel}
+        </if>
+        <if test="0 != nannyInfoReq.hot">
+            AND j.hot = #{nannyInfoReq.hot}
+        </if>
+    </select>
+
+    <select id="getNannyInfoList" parameterType="com.summ.model.request.NannyInfoReq"
+            resultType="com.summ.model.response.NannyListRes">
+        SELECT j.nannyId,j.nannyName,j.nannyPhone,j.createTime,j.nannyStatus,jti.INFO AS
+        nannyStatusInfo,j.nannyAge,j.remark,j.hot,d2.INFO AS hotInfo,j.nannyIdCard,d3.INFO as unitPrice
+        FROM j_nanny_info j
+        LEFT JOIN j_dict_info jti ON j.nannyStatus = jti.ID
+        LEFT JOIN j_dict_info d2 ON j.hot = d2.ID
+        LEFT JOIN j_dict_info d3 ON j.nannyLevel = d3.ID
+        LEFT JOIN j_nanny_shop jns ON j.nannyId = jns.nannyId
+        <if test="0 == nannyInfoReq.shopId">
+            LEFT JOIN j_admin_shop jas ON jas.shopId = jns.shopId
+        </if>
+        WHERE j.isDel = 16
+        <if test="0 != nannyInfoReq.nannyId">
+            AND j.nannyId = #{nannyInfoReq.nannyId}
+        </if>
+        <if test="'' != nannyInfoReq.nannyName">
+            AND j.nannyName LIKE concat(concat('%',#{nannyInfoReq.nannyName}),'%')
+        </if>
+        <if test="'' != nannyInfoReq.nannyPhone">
+            AND j.nannyPhone = #{nannyInfoReq.nannyPhone}
+        </if>
+        <if test="0 != nannyInfoReq.nannyStatus">
+            AND j.nannyStatus = #{nannyInfoReq.nannyStatus}
+        </if>
+        <if test="0 == nannyInfoReq.shopId">
+            AND jas.adminId = #{nannyInfoReq.adminId}
+        </if>
+        <if test="0 != nannyInfoReq.shopId">
+            AND jns.shopId = #{nannyInfoReq.shopId}
+        </if>
+        <if test="0 != nannyInfoReq.nannyLevel">
+            AND j.nannyLevel = #{nannyInfoReq.nannyLevel}
+        </if>
+        <if test="0 != nannyInfoReq.hot">
+            AND j.hot = #{nannyInfoReq.hot}
+        </if>
+        GROUP BY j.nannyId
+        limit #{nannyInfoReq.page},#{nannyInfoReq.size}
+    </select>
+
+    <select id="getNannyBasic" parameterType="java.lang.Integer" resultType="com.summ.model.response.NannyInfoRes">
+		SELECT j.nannyId,j.nannyAvatar,j.createTime,j.nannyName,j.nannyIdCard,j.nannyPhone,j.nannyAge,j.nannySex,d1.INFO AS nannySexInfo,j.idValidDate,
+				j.provinceId,d2.provinceName AS provinceIdInfo,j.cityId,d3.cityName AS cityIdInfo,j.areaId,d4.areaName AS areaIdInfo,j.streetId,d5.streetName AS streetIdInfo,j.nannyAddress,j.remark
+		FROM j_nanny_info j
+		LEFT JOIN j_dict_info d1 ON d1.ID = j.nannySex
+		LEFT JOIN j_province d2 ON d2.provinceId = j.provinceId
+		LEFT JOIN j_city d3 ON d3.cityId = j.cityId
+		LEFT JOIN j_area d4 ON d4.areaId = j.areaId
+		LEFT JOIN j_street d5 ON d5.streetId = j.streetId
+		WHERE j.nannyId = #{0}
+	</select>
+
+
+    <select id="getJobData" resultType="com.summ.model.response.NannyInfoRes">
+		SELECT j.*,d1.INFO AS nannyStatusInfo,d2.INFO AS nannyLevelInfo,d3.INFO AS paymentInfo,
+				d4.INFO AS hotInfo,d5.INFO AS agencyPayStatusInfo
+		FROM j_nanny_info j
+		LEFT JOIN j_dict_info d1 ON d1.ID = j.nannyStatus
+		LEFT JOIN j_dict_info d2 ON d2.ID = j.nannyLevel
+		LEFT JOIN j_dict_info d3 ON d3.ID = j.payment
+		LEFT JOIN j_dict_info d4 ON d4.ID = j.hot
+		LEFT JOIN j_dict_info d5 ON d5.ID = j.agencyPayStatus
+		WHERE j.nannyId = #{0}
+	</select>
+
+    <select id="getNannyOther" resultType="com.summ.model.response.NannyInfoRes">
+		SELECT j.nannyHeight,j.nannyWeight,j.nannyOrigin,d1.provinceName AS nannyOriginInfo,j.nannyNation,d2.INFO AS nannyNationInfo,j.nannyAnimalSign,d3.INFO AS nannyAnimalSignInfo,j.nannyEducation,d4.INFO AS nannyEducationInfo
+		FROM j_nanny_info j
+		LEFT JOIN j_province d1 ON d1.provinceId = j.nannyOrigin
+		LEFT JOIN j_dict_info d2 ON d2.ID = j.nannyNation
+		LEFT JOIN j_dict_info d3 ON d3.ID = j.nannyAnimalSign
+		LEFT JOIN j_dict_info d4 ON d4.ID = j.nannyEducation
+		WHERE j.nannyId = #{0}
+	</select>
+
+    <select id="getNannyShop" resultType="com.summ.model.response.NannyShopRes">
+        SELECT j.nannyShopId,d1.shopName AS shopName,j.nannyId,j.shopId
+        FROM j_nanny_shop j
+        LEFT JOIN j_shop d1 ON d1.shopId= j.shopId
+        WHERE j.nannyId=#{0}
+        AND j.isDel=16
+    </select>
+
+    <select id="getNannyTrain" resultType="com.summ.model.response.NannyTrainRes">
+		SELECT j.nannyTrainId,d1.trainName AS trainIdInfo
+		FROM j_nanny_train j
+		LEFT JOIN j_train d1 ON d1.trainId= j.trainId
+		WHERE j.nannyId=#{0}
+		AND j.isDel=16
+	</select>
+
+    <select id="getNannyJobLevel" resultType="com.summ.model.response.NannyJobLevelRes">
+		SELECT j.nannyJobLevelId,d1.INFO AS jobLevelIdInfo
+		FROM j_nanny_job_level j
+		LEFT JOIN j_dict_info d1 ON d1.ID= j.jobLevelId
+		WHERE j.nannyId=#{0}
+		AND j.isDel=16
+	</select>
+
+    <select id="getNannyReligion" resultType="com.summ.model.response.NannyReligionRes">
+		SELECT j.nannyReligId,d1.INFO AS religionIdInfo
+		FROM j_nanny_religion j
+		LEFT JOIN j_dict_info d1 ON d1.ID= j.religionId
+		WHERE j.nannyId=#{0}
+		AND j.isDel=16
+	</select>
+    <select id="getNannyCertificate" resultType="com.summ.model.response.NannyCertificateRes">
+		SELECT j.nannyCertId,d1.INFO AS certificateIdInfo,j.photo,j.certificateId,j.certificateNumber,j.validDate
+		FROM j_nanny_certificate j
+		LEFT JOIN j_dict_info d1 ON d1.ID= j.certificateId
+		WHERE j.nannyId=#{0}
+		AND j.isDel=16
+	</select>
+    <select id="getNannyLanguage" resultType="com.summ.model.response.NannyLanguageRes">
+		SELECT j.nannyLangId,d1.INFO AS languageIdInfo
+		FROM j_nanny_language j
+		LEFT JOIN j_dict_info d1 ON d1.ID= j.languageId
+		WHERE j.nannyId=#{0}
+		AND j.isDel=16
+	</select>
+    <select id="getNannyCharacter" resultType="com.summ.model.response.NannyCharacterRes">
+		SELECT j.nannyChaId,d1.INFO AS characterIdInfo
+		FROM j_nanny_character j
+		LEFT JOIN j_dict_info d1 ON d1.ID= j.characterId
+		WHERE j.nannyId=#{0}
+		AND j.isDel=16
+	</select>
+    <select id="getNannySkill" resultType="com.summ.model.response.NannySkillRes">
+		SELECT j.nannySkillId,d1.INFO AS skillIdInfo
+		FROM j_nanny_skill j
+		LEFT JOIN j_dict_info d1 ON d1.ID= j.skillId
+		WHERE j.nannyId=#{0}
+		AND j.isDel=16
+	</select>
+
+    <!--<select id="getOrderTempNannyList" resultType="com.summ.model.response.OrderTempNannyRes">-->
+    <!--SELECT jni.nannyId,jni.nannyName,jni.nannyPhone,jdi.INFO AS nannyUnitPrice-->
+    <!--FROM j_nanny_info jni-->
+    <!--LEFT JOIN j_dict_info jdi ON jdi.ID=jni.nannyLevel-->
+    <!--LEFT JOIN j_nanny_job_level jnjl ON jnjl.nannyId = jni.nannyId-->
+    <!--LEFT JOIN j_nanny_job_level_goods jnjlg ON jnjlg.jobLevelId=jnjl.jobLevelId-->
+    <!--LEFT JOIN j_order_temp jot ON jot.goodsId = jnjlg.goodsId-->
+    <!--LEFT JOIN j_schedule_nanny jsn ON jsn.nannyId=jni.nannyId-->
+    <!--LEFT JOIN j_order_schedule jos ON jos.scheduleId=jsn.scheduleId-->
+    <!--WHERE jot.orderId=#{map.orderId}-->
+    <!--AND jni.nannyStatus=56-->
+    <!--AND jni.nannyName LIKE concat(concat('%',#{map.name}),'%')-->
+    <!--<foreach collection="map.timeList" index="index" item="item" open=" AND "-->
+    <!--separator=" &amp; jos.timeValue != 0 AND " close=" &amp; jos.timeValue != 0">-->
+    <!--#{item}-->
+    <!--</foreach>-->
+    <!--AND jos.scheduleDate=#{map.date}-->
+    <!--GROUP BY jni.nannyId-->
+    <!--</select>-->
+
+    <select id="getOrderTempNannyList" parameterType="java.util.Map"
+            resultType="com.summ.model.response.OrderTempNannyRes">
+        SELECT DISTINCT jni.nannyId,jni.nannyName,jni.nannyPhone,jdi.INFO AS nannyUnitPrice
+        FROM j_nanny_info jni
+        LEFT JOIN j_dict_info jdi ON jdi.ID=jni.nannyLevel
+        LEFT JOIN j_nanny_job_level jj ON jj.nannyId=jni.nannyId
+        LEFT JOIN j_nanny_job_level_goods jg ON jg.jobLevelId=jj.jobLevelId
+        LEFT JOIN j_nanny_shop jns ON jns.nannyId=jni.nannyId
+        WHERE jg.goodsId=#{map.goodsId}
+        AND jns.shopId=#{map.shopId}
+        AND jni.nannyName LIKE concat(concat('%',#{map.name}),'%')
+        AND
+        jni.nannyId IN (
+        SELECT nannyId
+        FROM j_nanny_work_time
+        WHERE jni.nannyStatus=56
+        <if test="'周一' == map.weekday">
+            <foreach collection="map.longList" index="index" item="item" open=" AND "
+                     separator=" &amp; monday != 0 AND " close=" &amp; monday != 0">
+                #{item}
+            </foreach>
+        </if>
+        <if test="'周二' == map.weekday">
+            <foreach collection="map.longList" index="index" item="item" open=" AND "
+                     separator=" &amp; tuesday != 0 AND " close=" &amp; tuesday != 0">
+                #{item}
+            </foreach>
+        </if>
+        <if test="'周三' == map.weekday">
+            <foreach collection="map.longList" index="index" item="item" open=" AND "
+                     separator=" &amp; wednesday != 0 AND " close=" &amp; wednesday != 0">
+                #{item}
+            </foreach>
+        </if>
+        <if test="'周四' == map.weekday">
+            <foreach collection="map.longList" index="index" item="item" open=" AND "
+                     separator=" &amp; thursday != 0 AND " close=" &amp; thursday != 0">
+                #{item}
+            </foreach>
+        </if>
+        <if test="'周五' == map.weekday">
+            <foreach collection="map.longList" index="index" item="item" open=" AND "
+                     separator=" &amp; friday != 0 AND " close=" &amp; friday != 0">
+                #{item}
+            </foreach>
+        </if>
+        <if test="'周六' == map.weekday">
+            <foreach collection="map.longList" index="index" item="item" open=" AND "
+                     separator=" &amp; saturday != 0 AND " close=" &amp; saturday != 0">
+                #{item}
+            </foreach>
+        </if>
+        <if test="'周天' == map.weekday">
+            <foreach collection="map.longList" index="index" item="item" open=" AND "
+                     separator=" &amp; sunday != 0 AND " close=" &amp; sunday != 0">
+                #{item}
+            </foreach>
+        </if>
+        AND nannyId NOT IN (
+        SELECT
+        jsn.nannyId
+        FROM
+        j_order_schedule j
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId = j.scheduleId
+        WHERE
+        1=1
+        AND j.scheduleStatus != 155
+        AND jsn.supplierId=1
+        AND j.scheduleDate BETWEEN #{map.startDate}
+        AND  #{map.endDate}
+        AND (
+        (
+        #{map.startId} &lt; j.startTime
+        AND j.startTime &lt; #{map.endId}
+        )
+        OR (
+        #{map.startId} &lt; j.endTime
+        AND j.endTime &lt; #{map.endId}
+        )
+        OR (
+        j.startTime &lt; #{map.startId}
+        AND j.endTime &gt; #{map.endId}
+        )
+        OR (
+        j.startTime &gt; #{map.startId}
+        AND j.endTime &lt; #{map.endId}
+        )
+        OR (j.endTime = #{map.endId})
+        OR (#{map.startId} = j.startTime)
+        )
+        <foreach collection="map.weekList" index="index" item="item" open=" AND j.weekday IN (" separator="," close=")">
+            #{item}
+        </foreach>
+        )
+        )
+    </select>
+
+
+</mapper>

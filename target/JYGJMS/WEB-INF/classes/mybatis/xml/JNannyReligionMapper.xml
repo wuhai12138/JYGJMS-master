@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JNannyReligionMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		nannyReligId, religionId, nannyId, isDel
+	</sql>
+
+	<select id="getSelectedReligion" resultType="com.summ.model.response.NannyReligionRes">
+		SELECT j.nannyReligId,d1.INFO AS religionIdInfo
+		FROM j_nanny_religion j
+		LEFT JOIN j_dict_info d1 ON j.religionId = d1.ID
+		WHERE j.nannyId = #{0}
+	</select>
+
+	<select id="getUnselectedReligion" resultType="com.summ.model.JDictInfo">
+		SELECT ID,INFO
+		FROM
+		j_dict_info
+		WHERE
+		ID NOT IN (
+			SELECT j.religionId
+			FROM
+			j_nanny_religion AS j
+			WHERE j.nannyId = ${nannyId})
+		AND
+		INFO LIKE "%${name}%"
+		AND TYPECODE = 18
+	</select>
+</mapper>

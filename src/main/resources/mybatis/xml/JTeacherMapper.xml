@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JTeacherMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		teacherId, teacherAvatar, teacherName, teacherSex, teacherStatus, teacherType, teacherLevel, payment, teacherPhone, provinceId, cityId, areaId, streetId, teacherAddress, teacherIdCard, teacherBirthday, teacherAge, teacherAnimalSign, teacherNation, teacherOrigin, teacherHeight, teacherWeight, teacherEducation, salaryBank, salaryCard, expectSalary, teacherAgencyFees, teacherCashPledge, validDate, hot, remark, createTime, modifyTime, isDel
+	</sql>
+
+	<select id="getTeacherShop" resultType="com.summ.model.response.TeacherShopRes">
+		SELECT j.teacherShopId,d1.shopName AS shopName,j.teacherId,d1.shopId
+		FROM j_teacher_shop j
+		LEFT JOIN j_shop d1 ON d1.shopId= j.shopId
+		WHERE j.teacherId=#{0}
+	</select>
+
+	<select id="getTeacherList" parameterType="com.summ.model.request.TeacherReq"
+			resultType="com.summ.model.response.TeacherListRes">
+		SELECT j.teacherId,j.teacherName,j.teacherPhone,j.createTime,j.teacherStatus,jti.INFO AS
+		teacherStatusInfo,j.teacherAge,j.remark
+		FROM j_teacher j
+		LEFT JOIN j_dict_info jti ON j.teacherStatus = jti.ID
+		LEFT JOIN j_teacher_shop jns ON j.teacherId = jns.teacherId
+		<if test="0 == teacherReq.shopId">
+			LEFT JOIN j_admin_shop jas ON jas.shopId = jns.shopId
+		</if>
+		WHERE j.isDel = 16
+		<if test="0 != teacherReq.teacherId">
+			AND j.teacherId = #{teacherReq.teacherId}
+		</if>
+		<if test="'' != teacherReq.teacherName">
+			AND j.teacherName LIKE concat(concat('%',#{teacherReq.teacherName}),'%')
+		</if>
+		<if test="'' != teacherReq.teacherPhone">
+			AND j.teacherPhone = #{teacherReq.teacherPhone}
+		</if>
+		<if test="0 != teacherReq.teacherStatus">
+			AND j.teacherStatus = #{teacherReq.teacherStatus}
+		</if>
+		<if test="0 == teacherReq.shopId">
+			AND jas.adminId = #{teacherReq.adminId}
+		</if>
+		<if test="0 != teacherReq.shopId">
+			AND jns.shopId = #{teacherReq.shopId}
+		</if>
+		GROUP BY j.teacherId
+		limit #{teacherReq.page},#{teacherReq.size}
+	</select>
+
+	<select id="getCount" parameterType="com.summ.model.request.TeacherReq"
+			resultType="java.lang.Integer">
+		SELECT count(j.teacherId)
+		FROM j_teacher j
+		LEFT JOIN j_dict_info jti ON j.teacherStatus = jti.ID
+		LEFT JOIN j_dict_info d2 ON j.hot = d2.ID
+		LEFT JOIN j_teacher_shop jns ON j.teacherId = jns.teacherId
+		<if test="0 == teacherReq.shopId">
+			LEFT JOIN j_admin_shop jas ON jas.shopId = jns.shopId
+		</if>
+		WHERE j.isDel = 16
+		<if test="0 != teacherReq.teacherId">
+			AND j.teacherId = #{teacherReq.teacherId}
+		</if>
+		<if test="'' != teacherReq.teacherName">
+			AND j.teacherName LIKE concat(concat('%',#{teacherReq.teacherName}),'%')
+		</if>
+		<if test="'' != teacherReq.teacherPhone">
+			AND j.teacherPhone = #{teacherReq.teacherPhone}
+		</if>
+		<if test="0 != teacherReq.teacherStatus">
+			AND j.teacherStatus = #{teacherReq.teacherStatus}
+		</if>
+		<if test="0 == teacherReq.shopId">
+			AND jas.adminId = #{teacherReq.adminId}
+		</if>
+		<if test="0 != teacherReq.shopId">
+			AND jns.shopId = #{teacherReq.shopId}
+		</if>
+	</select>
+
+	<select id="getTeacherById" parameterType="java.lang.Integer" resultType="com.summ.model.response.TeacherRes">
+		SELECT j.*,jti.INFO AS teacherSexInfo,jdi2.INFO AS teacherLevelInfo,jdi3.INFO AS teacherStatusInfo
+		FROM j_teacher j
+		LEFT JOIN j_dict_info jti ON j.teacherSex = jti.ID
+		LEFT JOIN j_dict_info jdi2 ON jdi2.ID=j.teacherLevel
+		LEFT JOIN j_dict_info jdi3 ON jdi3.ID=j.teacherStatus
+		WHERE j.teacherId=#{0}
+	</select>
+
+
+	<select id="getOrderTeacherList" parameterType="java.util.Map"
+			resultType="com.summ.model.response.TeacherRes">
+		SELECT jt.teacherId,jt.teacherName,jt.teacherPhone,jdi.INFO AS teacherLevelInfo
+		FROM j_teacher jt
+		LEFT JOIN j_dict_info jdi ON jdi.ID=jt.teacherLevel
+		WHERE jt.teacherId IN (
+		SELECT teacherId
+		FROM j_teacher_work_time
+		WHERE jt.teacherStatus=56
+		<if test="'周一' == map.weekday">
+			<foreach collection="map.longList" index="index" item="item" open=" AND "
+					 separator=" &amp; monday != 0 AND " close=" &amp; monday != 0">
+				#{item}
+			</foreach>
+		</if>
+		<if test="'周二' == map.weekday">
+			<foreach collection="map.longList" index="index" item="item" open=" AND "
+					 separator=" &amp; tuesday != 0 AND " close=" &amp; tuesday != 0">
+				#{item}
+			</foreach>
+		</if>
+		<if test="'周三' == map.weekday">
+			<foreach collection="map.longList" index="index" item="item" open=" AND "
+					 separator=" &amp; wednesday != 0 AND " close=" &amp; wednesday != 0">
+				#{item}
+			</foreach>
+		</if>
+		<if test="'周四' == map.weekday">
+			<foreach collection="map.longList" index="index" item="item" open=" AND "
+					 separator=" &amp; thursday != 0 AND " close=" &amp; thursday != 0">
+				#{item}
+			</foreach>
+		</if>
+		<if test="'周五' == map.weekday">
+			<foreach collection="map.longList" index="index" item="item" open=" AND "
+					 separator=" &amp; friday != 0 AND " close=" &amp; friday != 0">
+				#{item}
+			</foreach>
+		</if>
+		<if test="'周六' == map.weekday">
+			<foreach collection="map.longList" index="index" item="item" open=" AND "
+					 separator=" &amp; saturday != 0 AND " close=" &amp; saturday != 0">
+				#{item}
+			</foreach>
+		</if>
+		<if test="'周天' == map.weekday">
+			<foreach collection="map.longList" index="index" item="item" open=" AND "
+					 separator=" &amp; sunday != 0 AND " close=" &amp; sunday != 0">
+				#{item}
+			</foreach>
+		</if>
+		AND teacherId NOT IN (
+		SELECT
+		jsn.nannyId
+		FROM
+		j_order_schedule j
+		LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId = j.scheduleId
+		WHERE
+		1=1
+		AND j.isDel=16
+		AND j.scheduleStatus != 155
+		AND jsn.supplierId=-1
+		AND j.scheduleDate BETWEEN #{map.startDate}
+		AND  #{map.endDate}
+		AND (
+		(
+		#{map.startId} &lt; j.startTime
+		AND j.startTime &gt; #{map.endId}
+		)
+		OR (
+		#{map.startId} &lt; j.endTime
+		AND j.endTime &gt; #{map.endId}
+		)
+		OR (
+		j.startTime &lt; #{map.startId}
+		AND j.endTime &gt; #{map.endId}
+		)
+		OR (
+		j.startTime &gt; #{map.startId}
+		AND j.endTime &lt; #{map.endId}
+		)
+		OR (j.endTime = #{map.endId})
+		OR (#{map.startId} = j.startTime)
+		)
+		<foreach collection="map.weekList" index="index" item="item" open=" AND j.weekday IN (" separator="," close=")">
+			#{item}
+		</foreach>
+		)
+		)
+	</select>
+
+</mapper>

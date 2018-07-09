@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JAppBannerGoodsMapper">
+
+
+    <select id="getBannerGoods" resultType="com.summ.model.response.BannerGoodsRes">
+        SELECT j.*,jgc.service
+        FROM j_app_banner_goods j
+        LEFT JOIN j_goods_contract jgc ON jgc.goodsId=j.goodsId
+        WHERE j.bannerId = #{0}
+    </select>
+</mapper>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JInvoiceMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		invoiceId, invoiceTitle, taxNumber, invoiceType, expenseType, invoiceMoney, invoiceStatus, invoicingId, invoicingIdType, invoiceDate, createId, createTime, isDel
+	</sql>
+    <select id="getInvoice" parameterType="java.util.Map" resultType="com.summ.model.response.InvoiceRes">
+        SELECT j.*,jdi.INFO AS invoiceTypeInfo,jdi2.INFO AS expenseTypeInfo,jdi3.INFO AS invoiceStatusInfo,ja1.adminName,ja2.adminName AS invoicingName
+        FROM j_invoice j
+        LEFT JOIN j_dict_info jdi ON jdi.ID=j.invoiceType
+        LEFT JOIN j_dict_info jdi2 ON jdi2.ID=j.expenseType
+        LEFT JOIN j_dict_info jdi3 ON jdi3.ID=j.invoiceStatus
+        LEFT JOIN j_admin ja1 ON ja1.adminId=j.createId
+        LEFT JOIN j_admin ja2 ON ja2.adminId=j.invoicingId
+        WHERE j.isDel=16
+        AND
+        j.createDate BETWEEN #{map.startDate}
+        AND #{map.endDate}
+        AND j.invoiceType IN
+        <foreach collection="map.invoiceType" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        AND j.expenseType IN
+        <foreach collection="map.expenseType" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="getInvoiceCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT count(j.invoiceId)
+        FROM j_invoice j
+        WHERE j.isDel=16
+        AND
+        j.createDate BETWEEN #{map.startDate}
+        AND #{map.endDate}
+        AND j.invoiceType IN
+        <foreach collection="map.invoiceType" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        AND j.expenseType IN
+        <foreach collection="map.expenseType" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="getCompany" resultType="com.summ.model.JCompanyData">
+        SELECT j.*
+        FROM j_company_data j
+    </select>
+
+</mapper>

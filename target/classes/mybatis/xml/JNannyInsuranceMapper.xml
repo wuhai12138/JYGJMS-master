@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JNannyInsuranceMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		insuranceId, insuranceDate, nannyId, createTime, isDel
+	</sql>
+
+	<select id="getNannyInsuranceList" parameterType="com.summ.model.request.NannyInsuranceReq"
+			resultType="com.summ.model.response.NannyInsuranceRes">
+		SELECT j.*,jni.nannyName,jni.nannyAge,jni.nannyIdCard,GROUP_CONCAT(js.shopName) AS shopName
+		FROM j_nanny_insurance j
+		LEFT JOIN j_nanny_info jni ON jni.nannyId = j.nannyId
+		LEFT JOIN j_nanny_shop jns ON jns.nannyId = j.nannyId
+		LEFT JOIN j_shop js ON js.shopId = jns.shopId
+		<if test="0 == nannyInsuranceReq.shopId">
+			LEFT JOIN j_admin_shop jas ON jas.shopId = jns.shopId
+		</if>
+		WHERE j.isDel = 16
+		AND j.insuranceDate = #{nannyInsuranceReq.insuranceDate}
+		<if test="0 != nannyInsuranceReq.shopId">
+			AND jns.shopId = #{nannyInsuranceReq.shopId}
+		</if>
+		<if test="0 == nannyInsuranceReq.shopId">
+			AND jas.adminId = #{nannyInsuranceReq.adminId}
+		</if>
+		ORDER BY j.createTime DESC
+		limit #{nannyInsuranceReq.page},#{nannyInsuranceReq.size}
+	</select>
+
+	<select id="getNannyInsuranceListCount" parameterType="com.summ.model.request.NannyInsuranceReq"
+			resultType="java.lang.Integer">
+		SELECT COUNT(DISTINCT(j.insuranceId))
+		FROM j_nanny_insurance j
+		LEFT JOIN j_nanny_info jni ON jni.nannyId = j.nannyId
+		LEFT JOIN j_nanny_shop jns ON jns.nannyId = j.nannyId
+		<if test="0 == nannyInsuranceReq.shopId">
+			LEFT JOIN j_admin_shop jas ON jas.shopId = jns.shopId
+		</if>
+		WHERE j.isDel = 16
+		AND j.insuranceDate = #{nannyInsuranceReq.insuranceDate}
+		<if test="0 != nannyInsuranceReq.shopId">
+			AND jns.shopId = #{nannyInsuranceReq.shopId}
+		</if>
+		<if test="0 == nannyInsuranceReq.shopId">
+			AND jas.adminId = #{nannyInsuranceReq.adminId}
+		</if>
+	</select>
+
+</mapper>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JNannyCharacterMapper">
+
+	<!-- 通用查询结果列-->
+	<sql id="Base_Column_List">
+		nannyChaId, characterId, nannyId, isDel
+	</sql>
+
+	<select id="getSelectedCharacter" resultType="com.summ.model.response.NannyCharacterRes">
+		SELECT j.nannyChaId,d1.INFO AS characterIdInfo
+		FROM j_nanny_character j
+		LEFT JOIN j_dict_info d1 ON j.characterId = d1.ID
+		WHERE j.nannyId = #{0}
+	</select>
+
+	<select id="getUnselectedCharacter" resultType="com.summ.model.JDictInfo">
+		SELECT ID,INFO
+		FROM
+		j_dict_info
+		WHERE
+		ID NOT IN (
+		SELECT j.characterId
+		FROM
+		j_nanny_character AS j
+		WHERE j.nannyId = ${nannyId})
+		AND
+		INFO LIKE "%${name}%"
+		AND TYPECODE = 20
+	</select>
+
+</mapper>

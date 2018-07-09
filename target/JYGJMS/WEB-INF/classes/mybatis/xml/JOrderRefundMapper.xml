@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.summ.mapper.JOrderRefundMapper">
+
+    <!-- 通用查询结果列-->
+    <sql id="Base_Column_List">
+		refundId, customerId, orderType, orderId, scheduleId, payWay, rufundWay, checkStatus, reason, money, remark, createId, createDate, checkId, checkDate, isDel
+	</sql>
+
+    <select id="getOrderRefundList" parameterType="java.util.Map" resultType="com.summ.model.response.OrderRefundRes">
+        SELECT
+        j.*, jdi1.INFO AS checkStatusInfo,
+        jdi2.INFO AS orderTypeInfo,
+        jdi3.INFO AS payWayInfo,
+        jdi4.INFO AS reasonInfo,
+        jdi5.INFO AS refundWayInfo,
+        jc.customerName,
+        jc.customerPhone,
+        jcc.couponCost,
+        jcc.couponPrice,
+        jcc.couponName,
+        ja1.adminName AS createName,
+        ja2.adminName AS checkName
+        FROM
+        j_order_refund j
+        LEFT JOIN j_dict_info jdi1 ON jdi1.ID = j.checkStatus
+        LEFT JOIN j_dict_info jdi2 ON jdi2.ID = j.orderType
+        LEFT JOIN j_dict_info jdi3 ON jdi3.ID = j.payWay
+        LEFT JOIN j_dict_info jdi4 ON jdi4.ID = j.reason
+        LEFT JOIN j_dict_info jdi5 ON jdi5.ID = j.refundWay
+        LEFT JOIN j_admin ja1 ON ja1.adminId = j.createId
+        LEFT JOIN j_admin ja2 ON ja2.adminId = j.checkId
+        LEFT JOIN j_customer jc ON jc.customerId = j.customerId
+        LEFT JOIN j_coupon_list jcl ON jcl.couponListId = j.couponListId
+        LEFT JOIN j_coupon jcc ON jcc.couponId = jcl.couponId
+        WHERE 1=1
+        AND j.isDel=16
+        AND j.createDate BETWEEN #{map.startDate}
+        AND  #{map.endDate}
+        AND j.orderType IN
+        <foreach collection="map.orderType" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        AND j.refundWay IN
+        <foreach collection="map.refundWay" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        AND j.checkStatus IN
+        <foreach collection="map.checkStatus" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        AND j.reason IN
+        <foreach collection="map.reason" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        limit #{map.page},#{map.size}
+    </select>
+
+    <select id="getOrderRefundListCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT
+        count(j.refundId)
+        FROM
+        j_order_refund j
+        LEFT JOIN j_dict_info jdi1 ON jdi1.ID = j.checkStatus
+        LEFT JOIN j_dict_info jdi2 ON jdi2.ID = j.orderType
+        LEFT JOIN j_dict_info jdi3 ON jdi3.ID = j.payWay
+        LEFT JOIN j_dict_info jdi4 ON jdi4.ID = j.reason
+        LEFT JOIN j_dict_info jdi5 ON jdi5.ID = j.refundWay
+        LEFT JOIN j_admin ja1 ON ja1.adminId = j.createId
+        LEFT JOIN j_admin ja2 ON ja2.adminId = j.checkId
+        LEFT JOIN j_customer jc ON jc.customerId = j.customerId
+        LEFT JOIN j_coupon_list jcl ON jcl.couponListId = j.couponListId
+        LEFT JOIN j_coupon jcc ON jcc.couponId = jcl.couponId
+        WHERE 1=1
+        AND j.isDel=16
+        AND j.createDate BETWEEN #{map.startDate}
+        AND  #{map.endDate}
+        AND j.orderType IN
+        <foreach collection="map.orderType" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        AND j.refundWay IN
+        <foreach collection="map.refundWay" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        AND j.checkStatus IN
+        <foreach collection="map.checkStatus" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        AND j.reason IN
+        <foreach collection="map.reason" index="index" item="item" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getContractRefundDetail" resultType="com.summ.model.response.OrderRefundRes">
+        SELECT jos.scheduleId,jos.scheduleDate,jos.startTimeValue,jos.endTimeValue,jos.scheduleStatus,
+        jdi.INFO AS scheduleStatusInfo,jns.statmentMoney AS nannyCost,jni.nannyId,jni.nannyName,jni.nannyPhone,js.shopId,js.shopName,
+        jc.customerName,
+        jc.customerPhone,jdi2.INFO AS orderTypeInfo
+        FROM j_order_schedule jos
+        LEFT JOIN j_dict_info jdi ON jdi.ID=jos.scheduleStatus
+        LEFT JOIN j_dict_info jdi2 ON jdi2.ID=jos.orderType
+        LEFT JOIN j_order_refund jor ON jor.scheduleId=jos.scheduleId
+        LEFT JOIN j_order_contract joc ON jor.orderId=jos.orderId
+        LEFT JOIN j_customer jc ON jc.customerId=joc.customerId
+        LEFT JOIN j_shop js ON js.shopId=joc.shopId
+        LEFT JOIN j_nanny_statment jns ON jns.scheduleId=jor.scheduleId
+        LEFT JOIN j_nanny_info jni ON jni.nannyId=jns.nannyId
+        WHERE jor.refundId=#{0}
+    </select>
+    <select id="getTempRefundDetail" resultType="com.summ.model.response.OrderRefundRes">
+        SELECT jos.scheduleId,jos.scheduleDate,jos.startTimeValue,jos.endTimeValue,jos.scheduleStatus,jdi.INFO AS scheduleStatusInfo,js.shopId,js.shopName,jsn.nannyId,jsn.supplierId,
+        jc.customerName,
+        jc.customerPhone,jdi2.INFO AS orderTypeInfo
+        FROM j_order_schedule jos
+        LEFT JOIN j_dict_info jdi ON jdi.ID=jos.scheduleStatus
+        LEFT JOIN j_dict_info jdi2 ON jdi2.ID=jos.orderType
+        LEFT JOIN j_order_temp jot ON jot.orderId=jos.orderId
+        LEFT JOIN j_customer jc ON jc.customerId=jot.customerId
+        LEFT JOIN j_shop js ON js.shopId=jot.shopId
+        LEFT JOIN j_schedule_nanny jsn ON jsn.scheduleId=jos.scheduleId
+        WHERE jos.orderType=164
+        AND jos.orderId=#{0}
+        AND jos.isDel=16
+    </select>
+
+    <select id="getScheduleNannyInfo" resultType="com.summ.model.response.OrderRefundRes">
+        <if test="-1==supplierId">
+            SELECT jt.teacherId AS nannyId,jt.teacherName AS nannyName,jt.teacherPhone AS nannyPhone,j.statmentMoney AS
+            nannyCost
+            FROM j_teacher_statment j
+            LEFT JOIN j_teacher jt ON jt.teacherId=j.teacherId
+            WHERE j.scheduleId=#{scheduleId}
+            AND j.statmentSupplierType=174
+            AND j.isDel=16
+        </if>
+        <if test="1==supplierId">
+            SELECT jni.nannyId AS nannyId,jni.nannyName AS nannyName,jni.nannyPhone AS nannyPhone,j.statmentMoney AS
+            nannyCost
+            FROM j_nanny_statment j
+            LEFT JOIN j_nanny_info jni ON jni.nannyId=j.nannyId
+            WHERE j.scheduleId=#{scheduleId}
+            AND j.statmentNannyType IN (162,166)
+            AND j.isDel=16
+        </if>
+        <if test="1!=supplierId and -1!=supplierId">
+            SELECT jt.supplierId AS nannyId,jt.supplierName AS nannyName,jt.supplierPhone AS nannyPhone,j.statmentMoney AS
+            nannyCost
+            FROM j_supplier_statment j
+            LEFT JOIN j_supplier jt ON jt.supplierId=j.supplierId
+            WHERE j.scheduleId=#{scheduleId}
+            AND j.statmentTeacherType IN (162,166)
+            AND j.isDel=16
+        </if>
+    </select>
+
+</mapper>
